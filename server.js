@@ -1,20 +1,13 @@
 const hre = require("hardhat");
 
 async function main() {
-  const port = process.env.PORT || 8000;
-  const host = "0.0.0.0";
+  const PORT = process.env.PORT || 10000;
+  console.log(`NGN Chain starting on port ${PORT}...`);
   
-  console.log(`Starting NGN Chain on ${host}:${port} ...`);
-  
-  // Start hardhat node programmatically
-  await hre.run("node", {
-    hostname: host,
-    port: port,
-    showStackTraces: true
+  const node = await hre.run("node", {
+    hostname: "0.0.0.0",
+    port: PORT
   });
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main().catch(console.error);
