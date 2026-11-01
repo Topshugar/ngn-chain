@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const ganache = require('ganache');
 const path = require('path');
+const solc = require('solc');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({limit: '5mb'}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const YOUR_CHAIN_ID = 777;
@@ -20,11 +21,20 @@ const ganacheServer = ganache.server({
   },
   logging: { quiet: true }
 });
+ganacheServer.listen(8545, () => console.log(`Chain 777 running`));
 
-ganacheServer.listen(8545, async () => {
-  console.log(`NGN Chain running Chain ID ${YOUR_CHAIN_ID}`);
-  const accounts = await ganacheServer.provider.request({ method: "eth_accounts", params: [] });
-  console.log("Accounts:", accounts);
+// NEW: COMPILE ENDPOINT - This fixes phone compile
+app.post('/compile', (req, res) => {
+  try {
+    const source = req.body.source;
+    const input = {
+      language: 'Solidity',
+      sources: { 'NGN.sol': { content: source } },
+      settings: { outputSelection: { '*': { '*': ['abi', 'evm.bytecode'] } } }
+    };
+    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    res.json(output);
+  } catch(e){ res.status(500).json({error: e.message}) }
 });
 
 app.get('/studio', (req, res) => {
@@ -32,12 +42,7 @@ app.get('/studio', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send(`
-    <h1>NGN CHAIN LIVE - Chain ID 777</h1>
-    <p>RPC: https://ngn-chain.onrender.com</p>
-    <p>Your Chain ID: ${YOUR_CHAIN_ID} is YOURS forever</p>
-    <a href="/studio"><button style="padding:15px;background:#008751;color:white;font-size:18px;border:none;cursor:pointer">OPEN NGN STUDIO</button></a>
-  `);
+  res.send(`<h1>NGN CHAIN 777 LIVE</h1><a href="/studio">OPEN STUDIO</a>`);
 });
 
 app.post('/', (req, res) => {
