@@ -2,110 +2,104 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NGN DARK STUDIO - WALLETCONNECT</title>
+<title>NGN Studio - Deploy on Chain 777</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.11.0/dist/umd/index.min.js"></script>
 <style>
-body{margin:0;background:#000;color:#00ff41;font-family:monospace}
-#top{padding:12px;border-bottom:1px solid #00ff41;display:flex;justify-content:space-between;font-size:12px;position:sticky;top:0;background:#000;z-index:10}
-#editor{height:45vh;border:1px solid #00ff41;margin:8px}
-#ctrl{display:flex;gap:6px;padding:0 8px;flex-wrap:wrap}
-button{background:#000;color:#00ff41;border:1px solid #00ff41;padding:14px 8px;flex:1;min-width:110px;font-family:monospace;font-weight:bold;font-size:11px;cursor:pointer}
-button:hover{background:#00ff41;color:#000;box-shadow:0 0 8px #00ff41}
-#log{background:#050505;border:1px solid #00ff41;margin:8px;padding:10px;height:28vh;overflow:auto;font-size:11px;line-height:1.5}
-.connected{color:#00ff41;border-color:#00ff41}
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+body{margin:0;background:#0a0a0b;color:#e5e5e5;font-family:'JetBrains Mono',monospace}
+.top{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;background:#000;position:sticky;top:0}
+.logo{color:#00ff41;font-weight:700}
+#editor{height:50vh;border:1px solid #222;margin:12px;border-radius:10px;overflow:hidden}
+.row{display:flex;gap:8px;padding:0 12px}
+button{flex:1;background:#111;color:#fff;border:1px solid #222;padding:14px;border-radius:10px;font-family:'JetBrains Mono';font-weight:700;font-size:12px;cursor:pointer}
+button.green{background:#00ff41;color:#000;border-color:#00ff41}
+#log{background:#111;border:1px solid #222;margin:12px;padding:12px;border-radius:10px;height:28vh;overflow:auto;font-size:11px;line-height:1.7}
+a{color:#00ff41;text-decoration:none}
 </style>
 </head>
 <body>
-<div id="top"><b>NGN_DARKNET // 777</b><span id="wStatus">NOT CONNECTED</span></div>
+<div class="top"><span class="logo">NGN STUDIO [777]</span><span id="status" style="font-size:10px;border:1px solid #222;padding:4px 8px;border-radius:20px">NOT CONNECTED</span></div>
 <div id="editor"></div>
-<div id="ctrl">
-<button onclick="connectWallet()">🔗 CONNECT WALLET</button>
-<button onclick="compile()">> COMPILE</button>
-<button onclick="deploy()">> DEPLOY</button>
+<div class="row">
+<button onclick="connect()">CONNECT WALLET</button>
+<button onclick="compile()">COMPILE</button>
+<button class="green" onclick="deploy()">DEPLOY</button>
 </div>
-<div id="log">Root@NGN_Dark:~# Ready for the people<br>> Click CONNECT WALLET first</div>
+<div id="log">Ready.<br>> 1. Connect Wallet (adds NGN Chain 777)<br>> 2. Compile<br>> 3. Deploy<br>> Open in MetaMask Browser for best experience</div>
 
 <script>
-let editor, compiled=null, provider, signer, wcProvider;
+let editor, compiled=null, provider, signer;
 
-const code = `// SPDX-License-Identifier: MIT
+const defaultCode = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-contract NGN_Dark {
-    string public name = "Naira Dark Token";
+contract NGN {
+    string public name = "Naira Token";
     string public symbol = "NGN";
     uint8 public decimals = 18;
     uint256 public totalSupply;
     address public owner;
-    mapping(address => uint256) public balanceOf;
-    event Transfer(address a,address b,uint256 v);
-    constructor(){owner=msg.sender;totalSupply=1000000000*10**18;balanceOf[msg.sender]=totalSupply;}
-    function transfer(address to,uint256 v) public returns(bool){require(balanceOf[msg.sender]>=v);balanceOf[msg.sender]-=v;balanceOf[to]+=v;emit Transfer(msg.sender,to,v);return true;}
+    mapping(address=>uint256) public balanceOf;
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    constructor(){
+        owner = msg.sender;
+        totalSupply = 1000000000 * 10**18;
+        balanceOf[msg.sender] = totalSupply;
+        emit Transfer(address(0), msg.sender, totalSupply);
+    }
+    function transfer(address to, uint256 amount) public returns(bool){
+        require(balanceOf[msg.sender] >= amount, "insufficient");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
 }`;
 
 require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
-require(['vs/editor/editor.main'],()=>{editor=monaco.editor.create(document.getElementById('editor'),{value:code,language:'solidity',theme:'vs-dark'})});
-
-function log(m){const l=document.getElementById('log');l.innerHTML+=`<br>> ${m}`;l.scrollTop=l.scrollHeight}
-
-async function connectWallet(){
-log('Opening WalletConnect... Choose any wallet');
-try{
-// If MetaMask is there, use it first
-if(window.ethereum){
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  await window.ethereum.request({method:'eth_requestAccounts'});
-  signer = provider.getSigner();
-  const addr = await signer.getAddress();
-  document.getElementById('wStatus').innerHTML = addr.slice(0,6)+'...'+addr.slice(-4)+' ✅';
-  log('Connected: '+addr);
-} else {
-// WalletConnect fallback for any wallet
-  wcProvider = await window.EthereumProvider.init({
-    projectId: 'c5a7c2c6cc88e1d06e1a5fb64a45772', // public demo ID - works for testing
-    chains: [777],
-    showQrModal: true,
-    rpcMap: { 777: 'https://ngn-chain.onrender.com' },
-    metadata: { name: 'NGN Dark Studio', description: 'For The People', url: 'https://ngn-chain.onrender.com', icons: [] }
+require(['vs/editor/editor.main'],()=>{
+  editor = monaco.editor.create(document.getElementById('editor'),{
+    value: defaultCode, language:'solidity', theme:'vs-dark', fontSize:12, minimap:{enabled:false}
   });
-  await wcProvider.enable();
-  provider = new ethers.providers.Web3Provider(wcProvider);
-  signer = provider.getSigner();
-  const addr = await signer.getAddress();
-  document.getElementById('wStatus').innerHTML = addr.slice(0,6)+'...'+addr.slice(-4)+' ✅';
-  log('WalletConnect Connected: '+addr);
-}
-// Auto add NGN Chain
-try{
-await provider.provider.request ? await provider.provider.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+(777).toString(16),chainName:'NGN Dark Chain',rpcUrls:['https://ngn-chain.onrender.com'],nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18}}]}) 
-: await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+(777).toString(16),chainName:'NGN Dark Chain',rpcUrls:['https://ngn-chain.onrender.com'],nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18}}]});
-log('NGN Chain 777 added ✅');
-}catch(e){log('Add chain: '+e.message)}
-}catch(e){log('Connect failed: '+e.message)}
+});
+
+function log(m){ const l=document.getElementById('log'); l.innerHTML+=`<br>> ${m}`; l.scrollTop=l.scrollHeight; }
+
+async function connect(){
+  if(!window.ethereum){ log('Please open this link inside MetaMask / Trust Wallet browser app'); return; }
+  try{
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await window.ethereum.request({method:'eth_requestAccounts'});
+    await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+(777).toString(16),chainName:'NGN Chain',rpcUrls:['https://ngn-chain.onrender.com'],nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},blockExplorerUrls:['https://ngn-chain.onrender.com']}]});
+    signer = provider.getSigner();
+    const addr = await signer.getAddress();
+    document.getElementById('status').innerText = addr.slice(0,6)+'...'+addr.slice(-4)+' CONNECTED';
+    log('Connected: '+addr);
+    log('NGN Chain 777 added ✅');
+  }catch(e){ log('Connect error: '+e.message); }
 }
 
 async function compile(){
-log('Compiling on server...');
-const r=await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});
-const out=await r.json();
-if(out.errors){out.errors.forEach(e=>log(e.formattedMessage)); if(out.errors.some(e=>e.severity=='error')) return;}
-compiled=out.contracts['NGN.sol']['NGN_Dark'];
-log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes - Ready to DEPLOY`);
+  log('Compiling on server...');
+  const res = await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});
+  const out = await res.json();
+  if(out.errors){ out.errors.forEach(e=>log(e.formattedMessage)); if(out.errors.some(x=>x.severity=='error')) return; }
+  compiled = out.contracts['NGN.sol']['NGN'];
+  log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes - Ready to deploy`);
 }
 
 async function deploy(){
-if(!compiled){log('Click COMPILE first!');return}
-if(!signer){log('Click CONNECT WALLET first!');return}
-try{
-log('Deploying to NGN Chain 777...');
-const factory=new ethers.ContractFactory(compiled.abi,compiled.evm.bytecode.object,signer);
-const c=await factory.deploy();
-log('Tx: '+c.deployTransaction.hash);
-await c.deployed();
-log('DEPLOYED ✅ ADDRESS: '+c.address);
-log('COPY THIS ADDRESS - This is your NGN token!');
-}catch(e){log('Deploy error: '+e.message)}
+  if(!compiled){ log('Compile first!'); return; }
+  if(!signer){ log('Connect wallet first!'); return; }
+  try{
+    log('Deploying to NGN 777...');
+    const factory = new ethers.ContractFactory(compiled.abi, compiled.evm.bytecode.object, signer);
+    const c = await factory.deploy();
+    log('Tx: '+c.deployTransaction.hash);
+    await c.deployed();
+    log('DEPLOYED ✅ ADDRESS: '+c.address);
+    log('SAVE THIS ADDRESS - This is your token!');
+  }catch(e){ log('Deploy error: '+e.message); }
 }
 </script>
 </body>
