@@ -2,114 +2,106 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>NGN DARK STUDIO</title>
+<title>NGN DARK STUDIO - PHONE COMPILER</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+<script src="https://unpkg.com/solc@0.8.19/soljson.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 *{box-sizing:border-box}
-body{margin:0;background:#000;color:#00ff41;font-family:'Share Tech Mono',monospace;overflow-x:hidden}
-#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:0.08}
-#topbar{background:#000;border-bottom:1px solid #00ff41;padding:10px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
-#topbar b{color:#00ff41;text-shadow:0 0 5px #00ff41;letter-spacing:2px}
-#status{font-size:10px;color:#ff0040;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:0}}
-#editor{height:55vh;border:1px solid #00ff41;margin:8px;box-shadow:0 0 15px #00ff4144}
+body{margin:0;background:#000;color:#00ff41;font-family:'Share Tech Mono',monospace}
+#topbar{background:#000;border-bottom:1px solid #00ff41;padding:10px;display:flex;justify-content:space-between;position:sticky;top:0;z-index:10}
+#editor{height:52vh;border:1px solid #00ff41;margin:8px;box-shadow:0 0 12px #00ff4133}
 #controls{display:flex;gap:6px;padding:0 8px;flex-wrap:wrap}
-button{background:#000;color:#00ff41;border:1px solid #00ff41;padding:12px 18px;font-family:inherit;font-weight:bold;cursor:pointer;text-transform:uppercase;letter-spacing:1px;flex:1;min-width:100px}
-button:active,button:hover{background:#00ff41;color:#000;box-shadow:0 0 10px #00ff41}
-#log{background:#050505;padding:10px;margin:8px;border:1px solid #00ff41;height:28vh;overflow:auto;font-size:13px;line-height:1.4;box-shadow:inset 0 0 10px #00ff4133}
-.glitch{position:relative}
-.term{color:#008f11}
-.anon{border:1px dashed #00ff41;padding:6px;margin:8px;font-size:11px;display:flex;justify-content:space-between}
-@media(max-width:600px){#editor{height:50vh}#topbar{font-size:12px}button{padding:14px;font-size:12px}}
+button{background:#000;color:#00ff41;border:1px solid #00ff41;padding:14px 10px;font-family:inherit;font-weight:bold;cursor:pointer;flex:1;min-width:90px;font-size:12px}
+button:hover{background:#00ff41;color:#000}
+#log{background:#050505;padding:10px;margin:8px;border:1px solid #00ff41;height:28vh;overflow:auto;font-size:12px;line-height:1.5}
+.anon{border:1px dashed #00ff41;padding:6px;margin:8px;font-size:10px;display:flex;justify-content:space-between}
+.ok{color:#00ff41}.err{color:#ff0040}.warn{color:#ffff00}
 </style>
 </head>
 <body>
-<canvas id="matrix"></canvas>
-<div id="topbar">
-<div><b>NGN_DARKNET // CHAIN_ID:777</b> <span id="status">● LIVE • TOR ROUTED</span></div>
-<div style="font-size:10px">NGN-STUDIO v2.0</div>
-</div>
-
-<div class="anon">
-<span>RPC: https://ngn-chain.onrender.com [ENCRYPTED]</span>
-<span>PEERS: 12 • NIGERIA NODE</span>
-</div>
-
+<div id="topbar"><b>NGN_DARKNET // 777</b><span style="font-size:9px;color:#ff0040">● LIVE • PHONE READY</span></div>
+<div class="anon"><span>RPC: ngn-chain.onrender.com</span><span>FOR THE PEOPLE</span></div>
 <div id="editor"></div>
-
 <div id="controls">
-<button onclick="compile()">> COMPILE [F5]</button>
-<button onclick="deploy()">> DEPLOY TO DARKNET</button>
-<button onclick="hackEffect()">> INJECT</button>
+<button onclick="compile()">> COMPILE</button>
+<button onclick="deploy()">> DEPLOY</button>
+<button onclick="editor.setValue(sample)">> RESET</button>
 </div>
-
-<div id="log">
-<span class="term">root@ngn-darknet:~#</span> Initializing NGN Dark Studio...<br>
-<span class="term">></span> Connection to Nigerian Chain 777 secured<br>
-<span class="term">></span> For the people... system ready.<br>
-<span style="color:#ff0040">[!] DARK MODE ENABLED - PHONE OPTIMIZED</span>
-</div>
+<div id="log">root@ngn-dark:~# Dark compiler loading...<br>Wait 5 sec for solc...</div>
 
 <script>
-// Matrix rain
-const c=document.getElementById('matrix'),ctx=c.getContext('2d');c.width=window.innerWidth;c.height=window.innerHeight;
-const letters='01NGN'.split('');const font=12;const cols=c.width/font;const drops=Array(Math.floor(cols)).fill(1);
-function draw(){ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#00ff41';ctx.font=font+'px monospace';drops.forEach((y,i)=>{ctx.fillText(letters[Math.floor(Math.random()*letters.length)],i*font,y*font);if(y*font>c.height&&Math.random()>0.975)drops[i]=0;drops[i]++});}
-setInterval(draw,35);
-
-let editor;
-require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
-require(['vs/editor/editor.main'], function(){
-editor = monaco.editor.create(document.getElementById('editor'), {
-value: `// SPDX-License-Identifier: MIT
-// DARK NGN - For The People
+let editor, compiled = null;
+const sample = `// SPDX-License-Identifier: MIT
+// NGN FOR THE PEOPLE - DARK
 pragma solidity ^0.8.19;
-
 contract NGN_Dark {
     string public name = "Naira Dark Token";
     string public symbol = "NGN";
     uint8 public decimals = 18;
     uint256 public totalSupply;
     address public owner;
-    
     mapping(address => uint256) public balanceOf;
     event Transfer(address indexed from, address indexed to, uint256 value);
-    event DarkInject(address indexed by, string message);
-
     constructor() {
         owner = msg.sender;
-        totalSupply = 1000000000 * 10**18; // 1B for the people
+        totalSupply = 1000000000 * 10**18;
         balanceOf[msg.sender] = totalSupply;
-        emit DarkInject(msg.sender, "NGN CHAIN BORN - FOR THE PEOPLE");
     }
-
     function transfer(address to, uint256 value) public returns (bool) {
-        require(balanceOf[msg.sender] >= value, "INSUFFICIENT DARK");
+        require(balanceOf[msg.sender] >= value);
         balanceOf[msg.sender] -= value;
         balanceOf[to] += value;
         emit Transfer(msg.sender, to, value);
         return true;
     }
-}`,
-language: 'solidity', theme: 'vs-dark'
-});
+}`;
+
+require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
+require(['vs/editor/editor.main'], function(){
+editor = monaco.editor.create(document.getElementById('editor'), {value: sample, language: 'solidity', theme: 'vs-dark'});
+log('Editor ready. Solc 0.8.19 loaded ✅');
 });
 
-function log(m){const l=document.getElementById('log');l.innerHTML+='<br><span class="term">></span> '+m;l.scrollTop=l.scrollHeight}
+function log(m,c=''){const l=document.getElementById('log');l.innerHTML+=`<br><span class="${c}">> ${m}</span>`;l.scrollTop=l.scrollHeight}
 
-function compile(){log('Compiling with solc 0.8.19 [DARK EVM]...');setTimeout(()=>{log('COMPILED ✅ bytecode ready');log('Green tick - Ready for darknet inject');},600)}
-function hackEffect(){log('Injecting...');let i=0;const iv=setInterval(()=>{log('0x'+Math.random().toString(16).substr(2,8)+' ... OK');if(i++>4){clearInterval(iv);log('DARKNET SYNCED');}},200)}
+async function compile(){
+log('Compiling...','warn');
+try{
+const input = {
+  language: 'Solidity',
+  sources: {'NGN.sol': {content: editor.getValue()}},
+  settings: {outputSelection: {'*': {'*': ['abi','evm.bytecode']}}}
+};
+const output = JSON.parse(solc.compile(JSON.stringify(input)));
+if(output.errors){
+  output.errors.forEach(e=> log(e.formattedMessage, e.severity==='error'?'err':'warn'));
+  if(output.errors.some(e=>e.severity==='error')) return;
+}
+const contract = output.contracts['NGN.sol']['NGN_Dark'];
+compiled = contract;
+log(`COMPILED ✅ ${contract.evm.bytecode.object.length/2} bytes`,'ok');
+log('ABI ready - Click DEPLOY now','ok');
+}catch(e){log('Compile error: '+e.message,'err')}
+}
 
 async function deploy(){
-if(!window.ethereum){log('Install MetaMask dark extension!');return}
+if(!compiled){log('Click COMPILE first!','err');return}
+if(!window.ethereum){log('Open in MetaMask browser!','err');return}
 try{
 await window.ethereum.request({method:'eth_requestAccounts'});
 await window.ethereum.request({method:'wallet_addEthereumChain', params:[{chainId:'0x'+(777).toString(16), chainName:'NGN Dark Chain', rpcUrls:['https://ngn-chain.onrender.com'], nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18}}]});
-log('Wallet linked to NGN Darknet 777 [ENCRYPTED]');
-log('Click COMPILE then deploy from Remix or paste bytecode');
-}catch(e){log('Error: '+e.message)}
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
+log('Deploying to NGN Chain 777...','warn');
+const factory = new ethers.ContractFactory(compiled.abi, compiled.evm.bytecode.object, signer);
+const contract = await factory.deploy();
+log(`Tx sent: ${contract.deployTransaction.hash}`,'ok');
+await contract.deployed();
+log(`DEPLOYED ✅ Address: ${contract.address}`,'ok');
+log(`Add to MetaMask: ${contract.address}`,'ok');
+}catch(e){log('Deploy error: '+e.message,'err')}
 }
 </script>
 </body>
