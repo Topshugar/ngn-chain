@@ -5,7 +5,7 @@ async function main() {
   
   const options = {
     wallet: { 
-      mnemonic: "ngn chain naira nigeria blockchain top shugar 2024 free permanent live",
+mnemonic: "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat",
       totalAccounts: 10, 
       defaultBalance: 10000 
     },
