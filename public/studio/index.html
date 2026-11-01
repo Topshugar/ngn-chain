@@ -5,30 +5,16 @@
 <title>NGN DARK STUDIO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-*{box-sizing:border-box}
-body{margin:0;background:#000;color:#00ff41;font-family:'Share Tech Mono',monospace}
-#topbar{background:#000;border-bottom:1px solid #00ff41;padding:10px;display:flex;justify-content:space-between;position:sticky;top:0}
-#editor{height:52vh;border:1px solid #00ff41;margin:8px}
-#controls{display:flex;gap:6px;padding:0 8px;flex-wrap:wrap}
-button{background:#000;color:#00ff41;border:1px solid #00ff41;padding:14px 10px;font-family:inherit;font-weight:bold;flex:1;min-width:90px;font-size:12px}
-button:hover{background:#00ff41;color:#000}
-#log{background:#050505;padding:10px;margin:8px;border:1px solid #00ff41;height:28vh;overflow:auto;font-size:12px}
-</style>
+<style>body{margin:0;background:#000;color:#0f0;font-family:monospace}#top{padding:10px;border-bottom:1px solid #0f0;display:flex;justify-content:space-between}#editor{height:50vh;border:1px solid #0f0;margin:8px}#ctrl{display:flex;gap:6px;padding:0 8px}button{background:#000;color:#0f0;border:1px solid #0f0;padding:14px;flex:1;font-family:monospace;font-weight:bold}#log{background:#050505;border:1px solid #0f0;margin:8px;padding:10px;height:30vh;overflow:auto;font-size:12px}</style>
 </head>
 <body>
-<div id="topbar"><b>NGN_DARKNET // 777</b><span style="font-size:9px;color:#ff0040">● PHONE COMPILER</span></div>
+<div id="top"><b>NGN_DARKNET // 777</b><span style="color:red">● SERVER COMPILER</span></div>
 <div id="editor"></div>
-<div id="controls">
-<button onclick="compile()">> COMPILE</button>
-<button onclick="deploy()">> DEPLOY</button>
-</div>
-<div id="log">Loading solc...</div>
-
+<div id="ctrl"><button onclick="compile()">> COMPILE</button><button onclick="deploy()">> DEPLOY</button></div>
+<div id="log">Ready...</div>
 <script>
-let editor, compiled = null, solcReady = false;
-const sample = `// SPDX-License-Identifier: MIT
+let editor, compiled=null;
+const code = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 contract NGN_Dark {
     string public name = "Naira Dark Token";
@@ -37,74 +23,35 @@ contract NGN_Dark {
     uint256 public totalSupply;
     address public owner;
     mapping(address => uint256) public balanceOf;
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    constructor() {
-        owner = msg.sender;
-        totalSupply = 1000000000 * 10**18;
-        balanceOf[msg.sender] = totalSupply;
-    }
-    function transfer(address to, uint256 value) public returns (bool) {
-        require(balanceOf[msg.sender] >= value);
-        balanceOf[msg.sender] -= value;
-        balanceOf[to] += value;
-        emit Transfer(msg.sender, to, value);
-        return true;
-    }
+    event Transfer(address a,address b,uint256 v);
+    constructor(){owner=msg.sender;totalSupply=1000000000*10**18;balanceOf[msg.sender]=totalSupply;}
+    function transfer(address to,uint256 v) public returns(bool){require(balanceOf[msg.sender]>=v);balanceOf[msg.sender]-=v;balanceOf[to]+=v;emit Transfer(msg.sender,to,v);return true;}
 }`;
-
-// Load Monaco
 require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
-require(['vs/editor/editor.main'], function(){
-editor = monaco.editor.create(document.getElementById('editor'), {value: sample, language: 'solidity', theme: 'vs-dark'});
-});
-
-// Load SOLC correctly
+require(['vs/editor/editor.main'],()=>{editor=monaco.editor.create(document.getElementById('editor'),{value:code,language:'solidity',theme:'vs-dark'})});
 function log(m){const l=document.getElementById('log');l.innerHTML+=`<br>> ${m}`;l.scrollTop=l.scrollHeight}
-
-const script = document.createElement('script');
-script.src = 'https://binaries.soliditylang.org/bin/soljson-v0.8.19+commit.7dd6d404.js';
-script.onload = () => {
-  solcReady = true;
-  log('SOLC 0.8.19 READY ✅ Click COMPILE now');
-};
-script.onerror = () => log('SOLC failed to load, check internet');
-document.head.appendChild(script);
-
-function compile(){
-if(!solcReady){log('SOLC still loading, wait 3 sec');return}
-if(!editor){log('Editor not ready');return}
-try{
-  log('Compiling...');
-  const input = JSON.stringify({
-    language: 'Solidity',
-    sources: {'NGN.sol': {content: editor.getValue()}},
-    settings: {outputSelection: {'*': {'*': ['abi','evm.bytecode']}}}
-  });
-  const output = JSON.parse(solc.compile(input));
-  if(output.errors){
-    output.errors.forEach(e=> log(e.formattedMessage));
-    if(output.errors.some(e=>e.severity==='error')) return;
-  }
-  compiled = output.contracts['NGN.sol']['NGN_Dark'];
-  log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes - Ready to DEPLOY`);
-}catch(e){log('Error: '+e.message)}
+async function compile(){
+log('Compiling on server...');
+const r=await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});
+const out=await r.json();
+if(out.errors){out.errors.forEach(e=>log(e.formattedMessage)); if(out.errors.some(e=>e.severity=='error')) return;}
+compiled=out.contracts['NGN.sol']['NGN_Dark'];
+log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes`);
 }
-
 async function deploy(){
 if(!compiled){log('COMPILE first!');return}
-if(!window.ethereum){log('Open in MetaMask browser!');return}
+if(!window.ethereum){log('Open in MetaMask!');return}
 try{
 await window.ethereum.request({method:'eth_requestAccounts'});
-await window.ethereum.request({method:'wallet_addEthereumChain', params:[{chainId:'0x'+(777).toString(16), chainName:'NGN Dark Chain', rpcUrls:['https://ngn-chain.onrender.com'], nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18}}]});
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const signer = provider.getSigner();
-log('Deploying...');
-const factory = new ethers.ContractFactory(compiled.abi, compiled.evm.bytecode.object, signer);
-const c = await factory.deploy();
+await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+(777).toString(16),chainName:'NGN Dark',rpcUrls:['https://ngn-chain.onrender.com'],nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18}}]});
+const provider=new ethers.providers.Web3Provider(window.ethereum);
+const signer=provider.getSigner();
+const factory=new ethers.ContractFactory(compiled.abi,compiled.evm.bytecode.object,signer);
+const c=await factory.deploy();
 log('Tx: '+c.deployTransaction.hash);
 await c.deployed();
 log('DEPLOYED ✅ '+c.address);
-}catch(e){log('Deploy error: '+e.message)}
+}catch(e){log('Error: '+e.message)}
 }
 </script>
 </body>
