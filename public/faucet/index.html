@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NGN Faucet - Free 100 NGN</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700&display=swap');
+body{margin:0;background:#000;color:#fff;font-family:'Inter',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.box{width:100%;max-width:480px;background:#111;border:1px solid #222;border-radius:16px;padding:24px;text-align:center}
+h1{font-family:'JetBrains Mono';color:#b7ff00;margin:0 0 10px 0;font-size:22px}
+p{color:#888;font-size:13px;line-height:1.6}
+input{width:100%;background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:14px;font-family:'JetBrains Mono';color:#fff;font-size:12px;margin:16px 0}
+.btn{width:100%;background:#b7ff00;color:#000;border:0;padding:16px;border-radius:999px;font-family:'JetBrains Mono';font-weight:700;font-size:14px;cursor:pointer}
+.btn:disabled{opacity:0.5}
+.log{margin-top:16px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:10px;padding:12px;font-family:'JetBrains Mono';font-size:11px;color:#aaa;text-align:left;min-height:60px;word-break:break-all;white-space:pre-wrap}
+.links{margin-top:20px;display:flex;gap:10px}
+.links a{flex:1;border:1px solid #222;background:#111;color:#fff;padding:10px;border-radius:10px;text-decoration:none;font-family:'JetBrains Mono';font-size:10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>NGN FAUCET [777]</h1>
+<p>Claim <b style="color:#b7ff00">100 FREE NGN</b> for your NGN Special Wallet.<br>One claim per address per 24h.</p>
+<input id="addr" placeholder="Paste your NGN address 0x..." />
+<button class="btn" id="claimBtn" onclick="claim()">CLAIM 100 NGN →</button>
+<div class="log" id="log">Ready to claim...</div>
+<div class="links">
+<a href="/">← HOME</a>
+<a href="/studio/index.html">STUDIO →</a>
+</div>
+</div>
+<script>
+async function claim(){
+  const address = document.getElementById('addr').value.trim();
+  const logEl = document.getElementById('log');
+  const btn = document.getElementById('claimBtn');
+  if(!address.match(/^0x[a-fA-F0-9]{40}$/)){ logEl.innerText='Invalid address'; return; }
+  btn.disabled=true; btn.innerText='CLAIMING...'; logEl.innerText='Sending 100 NGN to '+address+'...';
+  try{
+    const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
+    const out = await res.json();
+    if(out.error) throw new Error(out.error);
+    logEl.innerText=`SUCCESS!\n\nAmount: 100 NGN\nTo: ${out.to}\nTx: ${out.txHash}\n\nYou can now deploy contracts!`;
+    btn.innerText='CLAIMED ✓';
+  }catch(e){
+    logEl.innerText='Error: '+e.message;
+    btn.disabled=false; btn.innerText='CLAIM 100 NGN →';
+  }
+}
+const params = new URLSearchParams(location.search);
+if(params.get('address')) document.getElementById('addr').value=params.get('address');
+</script>
+</body>
+</html>
