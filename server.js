@@ -21,9 +21,9 @@ const ganacheServer = ganache.server({
   },
   logging: { quiet: true }
 });
+
 ganacheServer.listen(8545, () => console.log(`Chain 777 running`));
 
-// NEW: COMPILE ENDPOINT - This fixes phone compile
 app.post('/compile', (req, res) => {
   try {
     const source = req.body.source;
@@ -42,7 +42,7 @@ app.get('/studio', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send(`<h1>NGN CHAIN 777 LIVE</h1><a href="/studio">OPEN STUDIO</a>`);
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.post('/', (req, res) => {
