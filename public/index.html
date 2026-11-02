@@ -1,46 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NGN CHAIN [777]</title>
+<title>NGN Chain 777 • Mobile-First L1 for Everyone</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw;font-family:'Inter',sans-serif}
-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;background:radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.9) 85%);pointer-events:none}
-.center{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;text-align:center;width:90%;max-width:600px}
-.logo{font-family:'JetBrains Mono';font-size:14px;letter-spacing:4px;color:#b7ff00;margin-bottom:20px;opacity:0.8}
-h1{font-size:clamp(32px,8vw,64px);font-weight:800;letter-spacing:-2px;line-height:0.9;margin-bottom:16px}
-h1 span{color:#b7ff00;text-shadow:0 0 20px #b7ff00}
-p{color:#888;font-size:14px;line-height:1.6;margin-bottom:36px}
-.big-btn{display:inline-block;background:#b7ff00;color:#000;font-family:'JetBrains Mono';font-weight:700;font-size:18px;padding:22px 56px;border-radius:999px;text-decoration:none;box-shadow:0 0 40px #b7ff0055;cursor:pointer;z-index:30;position:relative;margin:6px}
-.big-btn.outline{background:transparent;color:#b7ff00;border:1px solid #b7ff00;box-shadow:none}
-.stats{display:flex;justify-content:center;gap:24px;margin-top:40px;font-family:'JetBrains Mono';font-size:10px;color:#555}
-.stats b{color:#888;display:block;font-size:14px;margin-bottom:4px}
-.footer{position:fixed;bottom:0;width:100%;z-index:10;display:flex;justify-content:space-between;padding:12px 20px;font-family:'JetBrains Mono';font-size:9px;color:#333;border-top:1px solid #111;background:#000}
-.live{color:#b7ff00}
+:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif}
+.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(20px);background:rgba(5,5,7,0.85);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
+.dot{width:28px;height:28px;background:var(--lime);border-radius:8px;display:grid;place-items:center;color:#000;font-weight:800}
+.nav{display:flex;gap:8px}
+.btn{border:0;border-radius:999px;padding:10px 18px;font-family:'JetBrains Mono';font-weight:700;font-size:11px;cursor:pointer}
+.btn-w{background:#fff;color:#000}
+.btn-l{background:var(--lime);color:#000}
+.btn-g{background:#15151a;color:#fff;border:1px solid #222}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px}
+.hero{padding:38px 6px 20px 6px}
+.hero h1{font-size:44px;line-height:0.9;letter-spacing:-0.05em;margin:0;font-weight:800}
+.hero h1 span{color:var(--lime)}
+.hero h1 i{font-style:normal;color:#2a2a2e}
+.hero p{color:var(--muted);font-size:14px;line-height:1.7;margin:16px 0 22px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
+.stat b{display:block;font-family:'JetBrains Mono';font-size:18px}
+.stat span{font-size:10px;color:var(--muted);font-family:'JetBrains Mono';letter-spacing:0.06em}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;margin-top:14px}
+.card h3{font-family:'JetBrains Mono';font-size:14px;margin:0 0 8px 0}
+.card p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.chain{background:#08080a;border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px;font-family:'JetBrains Mono';font-size:11px}
+.chain b{color:var(--muted);font-size:9px;display:block;margin-bottom:6px}
+.logos{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.logo-pill{border:1px solid var(--border);background:#101014;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10px;color:var(--muted)}
+.foot{text-align:center;padding:30px 10px;color:var(--muted);font-family:'JetBrains Mono';font-size:10px;line-height:1.8}
+a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
-<canvas id="matrix"></canvas>
-<div class="overlay"></div>
-<div class="center">
-<div class="logo">NGN CHAIN • CHAIN ID 777 • EVM L1</div>
-<h1>THE CHAIN FOR<br><span>THE PEOPLE.</span></h1>
-<p>Community-owned EVM chain. Deploy Solidity, low fees, 2s blocks.<br>No presale. No VCs. Just code.</p>
-<a href="studio/index.html" class="big-btn">ENTER STUDIO →</a>
-<a href="faucet/index.html" class="big-btn outline">FAUCET 100 NGN</a>
-<div class="stats"><div><b>777</b>CHAIN ID</div><div><b>NGN</b>NATIVE</div><div><b>● LIVE</b>RPC</div><div><b>2S</b>BLOCK</div></div>
+<div class="top">
+<div class="logo"><div class="dot">N</div> NGN • 777</div>
+<div class="nav"><a href="/studio/index.html" class="btn btn-l">STUDIO</a></div>
 </div>
-<div class="footer"><span>RPC: https://ngn-chain.onrender.com • CHAIN ID 777</span><span class="live">● LIVE</span></div>
+
+<div class="wrap">
+<div class="hero">
+<h1>THE<br><span>MOBILE</span><br>CHAIN<i>.</i></h1>
+<p>NGN Chain 777 is a mobile-first EVM chain built in Lagos for builders without laptops. Generate wallets, claim gas, deploy contracts — all from your phone.</p>
+<div class="row">
+<a href="/studio/index.html" class="btn btn-l" style="text-align:center;padding:16px">OPEN STUDIO →</a>
+<a href="/faucet/index.html" class="btn btn-g" style="text-align:center;padding:16px">FAUCET</a>
+</div>
+<div class="stats">
+<div class="stat"><b>777</b><span>CHAIN ID</span></div>
+<div class="stat"><b>100</b><span>NGN FAUCET</span></div>
+<div class="stat"><b>3s</b><span>BLOCK TIME</span></div>
+</div>
+</div>
+
+<div class="card">
+<h3>Why NGN Chain?</h3>
+<p>Most chains require MetaMask desktop, laptop, and complex setup. NGN is built for our brothers & sisters who only have a phone. Works inside Trust Wallet browser natively.</p>
+<div class="row" style="margin-top:14px">
+<div class="stat" style="margin:0"><b>Phone</b><span>NO LAPTOP NEEDED</span></div>
+<div class="stat" style="margin:0"><b>m/44'/777'</b><span>NATIVE PATH</span></div>
+</div>
+</div>
+
+<div class="card">
+<h3>Chain Details</h3>
+<div class="chain"><b>RPC URL</b>https://ngn-chain.onrender.com</div>
+<div class="chain"><b>CHAIN ID</b>777 (0x309)</div>
+<div class="chain"><b>NATIVE SYMBOL</b>NGN</div>
+<div class="chain"><b>BLOCK EXPLORER</b>https://ngn-chain.onrender.com</div>
+<button class="btn btn-w" style="width:100%;margin-top:14px;padding:14px" onclick="addChain()">ADD TO WALLET IN 1 CLICK</button>
+</div>
+
+<div class="card">
+<h3>For Builders</h3>
+<p>Solidity ^0.8.20 fully compatible. Compile server-side, deploy with mobile signer. No API keys. No gatekeeping.</p>
+<div class="logos">
+<span class="logo-pill">Solidity</span><span class="logo-pill">EVM</span><span class="logo-pill">Mobile First</span><span class="logo-pill">Trust Wallet</span><span class="logo-pill">MetaMask Mobile</span>
+</div>
+</div>
+
+<div class="foot">
+NGN CHAIN 777 • BUILT IN LAGOS, NIGERIA • FOR THE MOBILE GENERATION<br>
+ChainId 777 • Native Path m/44'/777'/0'/0/0 • Open Source<br><br>
+<a href="/studio/index.html" style="color:var(--lime)">studio</a> • <a href="/faucet/index.html">faucet</a> • <a href="https://github.com">github</a>
+</div>
+</div>
+
 <script>
-const canvas=document.getElementById('matrix');const ctx=canvas.getContext('2d');let w,h,cols,ypos;
-function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;cols=Math.floor(w/14);ypos=Array(cols).fill(0);}
-resize();addEventListener('resize',resize);
-const chars='NGN77701AFRICA₦'.split('');
-function draw(){ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,w,h);ypos.forEach((y,i)=>{const t=chars[Math.floor(Math.random()*chars.length)];const x=i*14;ctx.fillStyle=Math.random()>0.97?'#fff':i%3===0?'#b7ff00':'#3a5a00';ctx.font='14px JetBrains Mono';ctx.fillText(t,x,y);if(y>h&&Math.random()>0.975)ypos[i]=0;else ypos[i]=y+14;});}
-setInterval(draw,50);
+async function addChain(){
+  const params={chainId:'0x309',chainName:'NGN Chain 777',nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},rpcUrls:['https://ngn-chain.onrender.com'],blockExplorerUrls:['https://ngn-chain.onrender.com']};
+  try{
+    if(!window.ethereum) return alert('Open this inside Trust Wallet or MetaMask app browser');
+    await window.ethereum.request({method:'wallet_addEthereumChain',params:[params]});
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x309'}]});
+    alert('NGN Chain 777 Added ✓');
+  }catch(e){ alert(e.message); }
+}
 </script>
 </body>
 </html>
