@@ -7,18 +7,18 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw;font-family:'Inter',sans-serif}
-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;background:radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.9) 80%)}
-.center{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;text-align:center;width:90%;max-width:600px}
+canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;background:radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.9) 80%);pointer-events:none}
+.center{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;text-align:center;width:90%;max-width:600px}
 .logo{font-family:'JetBrains Mono';font-size:14px;letter-spacing:4px;color:#b7ff00;margin-bottom:20px;opacity:0.8}
 h1{font-size: clamp(32px, 8vw, 64px);font-weight:800;letter-spacing:-2px;line-height:0.9;margin-bottom:16px}
 h1 span{color:#b7ff00;text-shadow:0 0 20px #b7ff00}
 p{color:#888;font-size:14px;line-height:1.6;margin-bottom:36px}
-.big-btn{display:inline-block;background:#b7ff00;color:#000;font-family:'JetBrains Mono';font-weight:700;font-size:18px;padding:22px 56px;border-radius:999px;text-decoration:none;box-shadow:0 0 40px #b7ff0055, 0 0 80px #b7ff0022;transition:0.2s;letter-spacing:1px}
+.big-btn{display:inline-block;background:#b7ff00;color:#000;font-family:'JetBrains Mono';font-weight:700;font-size:18px;padding:22px 56px;border-radius:999px;text-decoration:none;box-shadow:0 0 40px #b7ff0055, 0 0 80px #b7ff0022;transition:0.2s;letter-spacing:1px;cursor:pointer;position:relative;z-index:20}
 .big-btn:hover{transform:scale(1.05);box-shadow:0 0 60px #b7ff00aa}
 .stats{display:flex;justify-content:center;gap:24px;margin-top:40px;font-family:'JetBrains Mono';font-size:10px;color:#555}
 .stats b{color:#888;display:block;font-size:14px;margin-bottom:4px}
-.footer{position:fixed;bottom:0;width:100%;z-index:3;display:flex;justify-content:space-between;padding:12px 20px;font-family:'JetBrains Mono';font-size:9px;color:#333;border-top:1px solid #111;background:#000}
+.footer{position:fixed;bottom:0;width:100%;z-index:10;display:flex;justify-content:space-between;padding:12px 20px;font-family:'JetBrains Mono';font-size:9px;color:#333;border-top:1px solid #111;background:#000}
 .live{color:#b7ff00}
 </style>
 </head>
@@ -29,7 +29,7 @@ p{color:#888;font-size:14px;line-height:1.6;margin-bottom:36px}
   <div class="logo">NGN CHAIN • CHAIN ID 777 • EVM L1</div>
   <h1>THE CHAIN FOR<br><span>THE PEOPLE.</span></h1>
   <p>Community-owned EVM chain. Deploy Solidity, low fees, 2s blocks.<br>No presale. No VCs. Just code.</p>
-  <a href="/studio" class="big-btn">ENTER STUDIO →</a>
+  <a href="./studio/index.html" onclick="window.location.href='./studio/index.html'; return false;" class="big-btn">ENTER STUDIO →</a>
   <div class="stats">
     <div><b>777</b>CHAIN ID</div>
     <div><b>NGN</b>NATIVE</div>
