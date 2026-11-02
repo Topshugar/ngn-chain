@@ -2,128 +2,75 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NGN Studio - One Click Connect</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-<script type="module">
-import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit@1.7.8/+esm'
-import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@1.7.8/+esm'
-import { mainnet, defineChain } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-networks@1.7.8/+esm'
-
-const ngnChain = defineChain({
-  id: 777,
-  caipNetworkId: 'eip155:777',
-  chainNamespace: 'eip155',
-  name: 'NGN Chain',
-  nativeCurrency: { name: 'NGN', symbol: 'NGN', decimals: 18 },
-  rpcUrls: { default: { http: ['https://ngn-chain.onrender.com'] } },
-  blockExplorers: { default: { name: 'Explorer', url: 'https://ngn-chain.onrender.com' } }
-})
-
-// FREE ProjectId - get your own at cloud.reown.com (30 sec) replace here
-const projectId = 'f1d1d8f1b2c2e3d4a5b6c7d8e9f0a1b2'
-
-const metadata = {
-  name: 'NGN Chain Studio',
-  description: 'Deploy on NGN Chain 777',
-  url: window.location.origin,
-  icons: ['https://avatars.githubusercontent.com/u/37784886']
-}
-
-const appKit = createAppKit({
-  adapters: [new EthersAdapter()],
-  networks: [ngnChain, mainnet],
-  defaultNetwork: ngnChain,
-  projectId,
-  metadata,
-  features: { analytics: false }
-})
-
-window.appKit = appKit
-window.openConnect = () => appKit.open()
-window.getProvider = () => appKit.getWalletProvider()
-window.getSigner = async () => {
-  const provider = appKit.getWalletProvider()
-  if(!provider) return null
-  const { BrowserProvider } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm')
-  const ethersProvider = new BrowserProvider(provider)
-  return await ethersProvider.getSigner()
-}
-</script>
+<title>NGN CHAIN [777] - Enter The Chain</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-body{margin:0;background:#0a0a0b;color:#fff;font-family:'JetBrains Mono',monospace}
-.top{padding:14px 16px;display:flex;justify-content:space-between;background:#000;border-bottom:1px solid #222;position:sticky;top:0;z-index:10}
-.logo{color:#00ff41;font-weight:700}
-#editor{height:42vh;border:1px solid #222;margin:12px;border-radius:10px;overflow:hidden}
-.row{display:flex;gap:8px;padding:0 12px}
-button{flex:1;background:#111;color:#fff;border:1px solid #333;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono';font-size:13px}
-button.green{background:#00ff41;color:#000;font-size:14px}
-#log{background:#111;border:1px solid #222;margin:12px;padding:12px;border-radius:10px;height:30vh;overflow:auto;font-size:11px;line-height:1.8;white-space:pre-wrap}
-.how{background:linear-gradient(90deg,#00ff4122,#0000);border:1px solid #00ff4133;margin:12px;padding:12px;border-radius:10px;font-size:11px}
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw;font-family:'Inter',sans-serif}
+canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2;background:radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.9) 80%)}
+.center{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;text-align:center;width:90%;max-width:600px}
+.logo{font-family:'JetBrains Mono';font-size:14px;letter-spacing:4px;color:#b7ff00;margin-bottom:20px;opacity:0.8}
+h1{font-size: clamp(32px, 8vw, 64px);font-weight:800;letter-spacing:-2px;line-height:0.9;margin-bottom:16px}
+h1 span{color:#b7ff00;text-shadow:0 0 20px #b7ff00}
+p{color:#888;font-size:14px;line-height:1.6;margin-bottom:36px}
+.big-btn{display:inline-block;background:#b7ff00;color:#000;font-family:'JetBrains Mono';font-weight:700;font-size:18px;padding:22px 56px;border-radius:999px;text-decoration:none;box-shadow:0 0 40px #b7ff0055, 0 0 80px #b7ff0022;transition:0.2s;letter-spacing:1px}
+.big-btn:hover{transform:scale(1.05);box-shadow:0 0 60px #b7ff00aa}
+.stats{display:flex;justify-content:center;gap:24px;margin-top:40px;font-family:'JetBrains Mono';font-size:10px;color:#555}
+.stats b{color:#888;display:block;font-size:14px;margin-bottom:4px}
+.footer{position:fixed;bottom:0;width:100%;z-index:3;display:flex;justify-content:space-between;padding:12px 20px;font-family:'JetBrains Mono';font-size:9px;color:#333;border-top:1px solid #111;background:#000}
+.live{color:#b7ff00}
 </style>
 </head>
 <body>
-<div class="top"><span class="logo">NGN CHAIN [777]</span><span id="status" style="font-size:10px;border:1px solid #222;padding:5px 10px;border-radius:20px">NOT CONNECTED</span></div>
-
-<div class="how">👇 For your brothers: Just tap CONNECT, pick their wallet (Trust/MetaMask etc), Approve. No browser needed.</div>
-
-<div id="editor"></div>
-<div class="row">
-<button onclick="openConnect()">🔗 CONNECT ANY WALLET</button>
-<button onclick="compile()">COMPILE</button>
-<button class="green" onclick="deploy()">DEPLOY</button>
+<canvas id="matrix"></canvas>
+<div class="overlay"></div>
+<div class="center">
+  <div class="logo">NGN CHAIN • CHAIN ID 777 • EVM L1</div>
+  <h1>THE CHAIN FOR<br><span>THE PEOPLE.</span></h1>
+  <p>Community-owned EVM chain. Deploy Solidity, low fees, 2s blocks.<br>No presale. No VCs. Just code.</p>
+  <a href="/studio" class="big-btn">ENTER STUDIO →</a>
+  <div class="stats">
+    <div><b>777</b>CHAIN ID</div>
+    <div><b>NGN</b>NATIVE</div>
+    <div><b>● LIVE</b>RPC</div>
+    <div><b>2S</b>BLOCK</div>
+  </div>
 </div>
-<div id="log">Ready.
-> 1. CONNECT ANY WALLET (auto detects)
-> 2. COMPILE
-> 3. DEPLOY</div>
-
+<div class="footer">
+  <span>RPC: https://ngn-chain.onrender.com • ADD TO METAMASK CHAIN ID 777</span>
+  <span class="live">● LIVE</span>
+</div>
 <script>
-let editor, compiled=null
-const defaultCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
-contract NGN {
-    string public name="Naira Token"; string public symbol="NGN"; uint8 public decimals=18;
-    uint256 public totalSupply; address public owner; mapping(address=>uint256) public balanceOf;
-    event Transfer(address indexed from, address indexed to, uint256 v);
-    constructor(){ owner=msg.sender; totalSupply=1000000000*10**18; balanceOf[msg.sender]=totalSupply; emit Transfer(address(0),msg.sender,totalSupply); }
-    function transfer(address to,uint256 v) public returns(bool){ require(balanceOf[msg.sender]>=v); balanceOf[msg.sender]-=v; balanceOf[to]+=v; emit Transfer(msg.sender,to,v); return true; }
-}`;
-require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
-require(['vs/editor/editor.main'],()=>{ editor=monaco.editor.create(document.getElementById('editor'),{value:defaultCode,language:'solidity',theme:'vs-dark',fontSize:12,minimap:{enabled:false}}); });
-
-function log(m){ const l=document.getElementById('log'); l.innerHTML+=`\n> ${m}`; l.scrollTop=l.scrollHeight; }
-
-window.addEventListener('load',()=>{
-  if(window.appKit){
-    window.appKit.subscribeProviders(e=>{
-      if(e['eip155:777']){ document.getElementById('status').innerText = e['eip155:777'].address.slice(0,6)+'...'+e['eip155:777'].address.slice(-4)+' CONNECTED'; log('Connected: '+e['eip155:777'].address); }
-    })
-  }
-})
-
-async function compile(){
-  log('Compiling...');
-  const res = await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});
-  const out = await res.json();
-  if(out.errors){ out.errors.forEach(e=>log(e.formattedMessage||e.message)); if(out.errors.some(x=>x.severity=='error')) return; }
-  compiled = out.contracts['NGN.sol']['NGN'] || Object.values(Object.values(out.contracts)[0])[0];
-  log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes`);
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+let w, h, cols, ypos;
+function resize(){
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+  cols = Math.floor(w/14);
+  ypos = Array(cols).fill(0);
 }
-async function deploy(){
-  if(!compiled){ log('Compile first'); return; }
-  try{
-    const signer = await window.getSigner();
-    if(!signer){ log('Connect wallet first'); window.openConnect(); return; }
-    const { ContractFactory } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm');
-    log('Deploying...');
-    const factory = new ContractFactory(compiled.abi, '0x'+compiled.evm.bytecode.object, signer);
-    const c = await factory.deploy();
-    log('Tx: '+c.deploymentTransaction().hash);
-    await c.waitForDeployment();
-    log('DEPLOYED ✅ '+await c.getAddress());
-  }catch(e){ log('Deploy error: '+e.message); }
+resize();
+window.addEventListener('resize', resize);
+const chars = 'NGN77701AFRICA₦';
+const charArr = chars.split('');
+function draw(){
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fillRect(0,0,w,h);
+  ctx.fillStyle = '#b7ff00';
+  ctx.font = '14px JetBrains Mono';
+  ypos.forEach((y, ind)=>{
+    const text = charArr[Math.floor(Math.random()*charArr.length)];
+    const x = ind*14;
+    if(Math.random() > 0.97) ctx.fillStyle = '#fff';
+    else ctx.fillStyle = ind % 3 === 0 ? '#b7ff00' : '#3a5a00';
+    ctx.fillText(text, x, y);
+    if(y > h && Math.random() > 0.975) ypos[ind]=0;
+    else ypos[ind]=y+14;
+  });
 }
+setInterval(draw, 50);
 </script>
 </body>
 </html>
