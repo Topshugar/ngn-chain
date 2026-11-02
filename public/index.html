@@ -4,23 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NGN Chain 777 • Mobile-First L1 for Everyone</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90}
+:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90;--green:#00ff6a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif}
 .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(20px);background:rgba(5,5,7,0.85);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .logo{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
 .dot{width:28px;height:28px;background:var(--lime);border-radius:8px;display:grid;place-items:center;color:#000;font-weight:800}
 .nav{display:flex;gap:8px}
-.btn{border:0;border-radius:999px;padding:10px 18px;font-family:'JetBrains Mono';font-weight:700;font-size:11px;cursor:pointer}
+.btn{border:0;border-radius:999px;padding:10px 18px;font-family:'JetBrains Mono';font-weight:700;font-size:11px;cursor:pointer;text-decoration:none;text-align:center}
 .btn-w{background:#fff;color:#000}
 .btn-l{background:var(--lime);color:#000}
 .btn-g{background:#15151a;color:#fff;border:1px solid #222}
 .wrap{max-width:520px;margin:0 auto;padding:0 14px}
-.hero{padding:38px 6px 20px 6px}
+.live-banner{background:linear-gradient(90deg,#0f1a00,#0f0f11);border:1px solid #1e2a1e;border-radius:999px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin:14px 6px;font-family:'JetBrains Mono';font-size:10px}
+.live-dot{display:flex;align-items:center;gap:6px;color:var(--green)} .live-dot i{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);display:inline-block}
+.hero{padding:22px 6px 20px 6px}
 .hero h1{font-size:44px;line-height:0.9;letter-spacing:-0.05em;margin:0;font-weight:800}
-.hero h1 span{color:var(--lime)}
-.hero h1 i{font-style:normal;color:#2a2a2e}
+.hero h1 span{color:var(--lime)} .hero h1 i{font-style:normal;color:#2a2a2e}
 .hero p{color:var(--muted);font-size:14px;line-height:1.7;margin:16px 0 22px 0}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
@@ -35,27 +37,34 @@
 .logos{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .logo-pill{border:1px solid var(--border);background:#101014;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10px;color:var(--muted)}
 .foot{text-align:center;padding:30px 10px;color:var(--muted);font-family:'JetBrains Mono';font-size:10px;line-height:1.8}
-a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
 <div class="top">
 <div class="logo"><div class="dot">N</div> NGN • 777</div>
-<div class="nav"><a href="/studio/index.html" class="btn btn-l">STUDIO</a></div>
+<div class="nav">
+<a href="/explorer/index.html" class="btn btn-g">EXPLORER</a>
+<a href="/studio/index.html" class="btn btn-l">STUDIO</a>
+</div>
 </div>
 
 <div class="wrap">
+<div class="live-banner">
+<span class="live-dot"><i></i> LIVE • NGN CHAIN 777</span>
+<span id="liveBlock">Connecting...</span>
+</div>
+
 <div class="hero">
 <h1>THE<br><span>MOBILE</span><br>CHAIN<i>.</i></h1>
 <p>NGN Chain 777 is a mobile-first EVM chain built in Lagos for builders without laptops. Generate wallets, claim gas, deploy contracts — all from your phone.</p>
 <div class="row">
-<a href="/studio/index.html" class="btn btn-l" style="text-align:center;padding:16px">OPEN STUDIO →</a>
-<a href="/faucet/index.html" class="btn btn-g" style="text-align:center;padding:16px">FAUCET</a>
+<a href="/studio/index.html" class="btn btn-l" style="padding:16px">OPEN STUDIO →</a>
+<a href="/explorer/index.html" class="btn btn-g" style="padding:16px">EXPLORER</a>
 </div>
 <div class="stats">
 <div class="stat"><b>777</b><span>CHAIN ID</span></div>
 <div class="stat"><b>100</b><span>NGN FAUCET</span></div>
-<div class="stat"><b>3s</b><span>BLOCK TIME</span></div>
+<div class="stat"><b id="blockCount">—</b><span>LIVE BLOCK</span></div>
 </div>
 </div>
 
@@ -73,7 +82,7 @@ a{color:inherit;text-decoration:none}
 <div class="chain"><b>RPC URL</b>https://ngn-chain.onrender.com</div>
 <div class="chain"><b>CHAIN ID</b>777 (0x309)</div>
 <div class="chain"><b>NATIVE SYMBOL</b>NGN</div>
-<div class="chain"><b>BLOCK EXPLORER</b>https://ngn-chain.onrender.com</div>
+<div class="chain"><b>EXPLORER</b>/explorer/index.html</div>
 <button class="btn btn-w" style="width:100%;margin-top:14px;padding:14px" onclick="addChain()">ADD TO WALLET IN 1 CLICK</button>
 </div>
 
@@ -88,20 +97,30 @@ a{color:inherit;text-decoration:none}
 <div class="foot">
 NGN CHAIN 777 • BUILT IN LAGOS, NIGERIA • FOR THE MOBILE GENERATION<br>
 ChainId 777 • Native Path m/44'/777'/0'/0/0 • Open Source<br><br>
-<a href="/studio/index.html" style="color:var(--lime)">studio</a> • <a href="/faucet/index.html">faucet</a> • <a href="https://github.com">github</a>
+<a href="/studio/index.html" style="color:#c8ff00">studio</a> • <a href="/explorer/index.html">explorer</a> • <a href="/faucet/index.html">faucet</a>
 </div>
 </div>
 
 <script>
+const RPC='https://ngn-chain.onrender.com';
 async function addChain(){
-  const params={chainId:'0x309',chainName:'NGN Chain 777',nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},rpcUrls:['https://ngn-chain.onrender.com'],blockExplorerUrls:['https://ngn-chain.onrender.com']};
+  const params={chainId:'0x309',chainName:'NGN Chain 777',nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},rpcUrls:[RPC],blockExplorerUrls:[RPC]};
   try{
-    if(!window.ethereum) return alert('Open this inside Trust Wallet or MetaMask app browser');
+    if(!window.ethereum) return alert('Open inside Trust Wallet or MetaMask browser');
     await window.ethereum.request({method:'wallet_addEthereumChain',params:[params]});
     await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x309'}]});
     alert('NGN Chain 777 Added ✓');
   }catch(e){ alert(e.message); }
 }
+async function loadLive(){
+ try{
+  const provider=new ethers.providers.JsonRpcProvider(RPC);
+  const num=await provider.getBlockNumber();
+  document.getElementById('liveBlock').innerText='Block #'+num;
+  document.getElementById('blockCount').innerText='#'+num;
+ }catch{ document.getElementById('liveBlock').innerText='RPC Offline'; }
+}
+loadLive(); setInterval(loadLive,5000);
 </script>
 </body>
 </html>
