@@ -2,103 +2,126 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NGN Studio - Deploy on Chain 777</title>
+<title>NGN Studio - One Click Connect</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script type="module">
+import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit@1.7.8/+esm'
+import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@1.7.8/+esm'
+import { mainnet, defineChain } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-networks@1.7.8/+esm'
+
+const ngnChain = defineChain({
+  id: 777,
+  caipNetworkId: 'eip155:777',
+  chainNamespace: 'eip155',
+  name: 'NGN Chain',
+  nativeCurrency: { name: 'NGN', symbol: 'NGN', decimals: 18 },
+  rpcUrls: { default: { http: ['https://ngn-chain.onrender.com'] } },
+  blockExplorers: { default: { name: 'Explorer', url: 'https://ngn-chain.onrender.com' } }
+})
+
+// FREE ProjectId - get your own at cloud.reown.com (30 sec) replace here
+const projectId = 'f1d1d8f1b2c2e3d4a5b6c7d8e9f0a1b2'
+
+const metadata = {
+  name: 'NGN Chain Studio',
+  description: 'Deploy on NGN Chain 777',
+  url: window.location.origin,
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
+}
+
+const appKit = createAppKit({
+  adapters: [new EthersAdapter()],
+  networks: [ngnChain, mainnet],
+  defaultNetwork: ngnChain,
+  projectId,
+  metadata,
+  features: { analytics: false }
+})
+
+window.appKit = appKit
+window.openConnect = () => appKit.open()
+window.getProvider = () => appKit.getWalletProvider()
+window.getSigner = async () => {
+  const provider = appKit.getWalletProvider()
+  if(!provider) return null
+  const { BrowserProvider } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm')
+  const ethersProvider = new BrowserProvider(provider)
+  return await ethersProvider.getSigner()
+}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-body{margin:0;background:#0a0a0b;color:#e5e5e5;font-family:'JetBrains Mono',monospace}
-.top{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;background:#000;position:sticky;top:0}
+body{margin:0;background:#0a0a0b;color:#fff;font-family:'JetBrains Mono',monospace}
+.top{padding:14px 16px;display:flex;justify-content:space-between;background:#000;border-bottom:1px solid #222;position:sticky;top:0;z-index:10}
 .logo{color:#00ff41;font-weight:700}
-#editor{height:50vh;border:1px solid #222;margin:12px;border-radius:10px;overflow:hidden}
+#editor{height:42vh;border:1px solid #222;margin:12px;border-radius:10px;overflow:hidden}
 .row{display:flex;gap:8px;padding:0 12px}
-button{flex:1;background:#111;color:#fff;border:1px solid #222;padding:14px;border-radius:10px;font-family:'JetBrains Mono';font-weight:700;font-size:12px;cursor:pointer}
-button.green{background:#00ff41;color:#000;border-color:#00ff41}
-#log{background:#111;border:1px solid #222;margin:12px;padding:12px;border-radius:10px;height:28vh;overflow:auto;font-size:11px;line-height:1.7}
-a{color:#00ff41;text-decoration:none}
+button{flex:1;background:#111;color:#fff;border:1px solid #333;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-family:'JetBrains Mono';font-size:13px}
+button.green{background:#00ff41;color:#000;font-size:14px}
+#log{background:#111;border:1px solid #222;margin:12px;padding:12px;border-radius:10px;height:30vh;overflow:auto;font-size:11px;line-height:1.8;white-space:pre-wrap}
+.how{background:linear-gradient(90deg,#00ff4122,#0000);border:1px solid #00ff4133;margin:12px;padding:12px;border-radius:10px;font-size:11px}
 </style>
 </head>
 <body>
-<div class="top"><span class="logo">NGN STUDIO [777]</span><span id="status" style="font-size:10px;border:1px solid #222;padding:4px 8px;border-radius:20px">NOT CONNECTED</span></div>
+<div class="top"><span class="logo">NGN CHAIN [777]</span><span id="status" style="font-size:10px;border:1px solid #222;padding:5px 10px;border-radius:20px">NOT CONNECTED</span></div>
+
+<div class="how">👇 For your brothers: Just tap CONNECT, pick their wallet (Trust/MetaMask etc), Approve. No browser needed.</div>
+
 <div id="editor"></div>
 <div class="row">
-<button onclick="connect()">CONNECT WALLET</button>
+<button onclick="openConnect()">🔗 CONNECT ANY WALLET</button>
 <button onclick="compile()">COMPILE</button>
 <button class="green" onclick="deploy()">DEPLOY</button>
 </div>
-<div id="log">Ready.<br>> 1. Connect Wallet (adds NGN Chain 777)<br>> 2. Compile<br>> 3. Deploy<br>> Open in MetaMask Browser for best experience</div>
+<div id="log">Ready.
+> 1. CONNECT ANY WALLET (auto detects)
+> 2. COMPILE
+> 3. DEPLOY</div>
 
 <script>
-let editor, compiled=null, provider, signer;
-
+let editor, compiled=null
 const defaultCode = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 contract NGN {
-    string public name = "Naira Token";
-    string public symbol = "NGN";
-    uint8 public decimals = 18;
-    uint256 public totalSupply;
-    address public owner;
-    mapping(address=>uint256) public balanceOf;
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    constructor(){
-        owner = msg.sender;
-        totalSupply = 1000000000 * 10**18;
-        balanceOf[msg.sender] = totalSupply;
-        emit Transfer(address(0), msg.sender, totalSupply);
-    }
-    function transfer(address to, uint256 amount) public returns(bool){
-        require(balanceOf[msg.sender] >= amount, "insufficient");
-        balanceOf[msg.sender] -= amount;
-        balanceOf[to] += amount;
-        emit Transfer(msg.sender, to, amount);
-        return true;
-    }
+    string public name="Naira Token"; string public symbol="NGN"; uint8 public decimals=18;
+    uint256 public totalSupply; address public owner; mapping(address=>uint256) public balanceOf;
+    event Transfer(address indexed from, address indexed to, uint256 v);
+    constructor(){ owner=msg.sender; totalSupply=1000000000*10**18; balanceOf[msg.sender]=totalSupply; emit Transfer(address(0),msg.sender,totalSupply); }
+    function transfer(address to,uint256 v) public returns(bool){ require(balanceOf[msg.sender]>=v); balanceOf[msg.sender]-=v; balanceOf[to]+=v; emit Transfer(msg.sender,to,v); return true; }
 }`;
-
 require.config({paths:{vs:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}});
-require(['vs/editor/editor.main'],()=>{
-  editor = monaco.editor.create(document.getElementById('editor'),{
-    value: defaultCode, language:'solidity', theme:'vs-dark', fontSize:12, minimap:{enabled:false}
-  });
-});
+require(['vs/editor/editor.main'],()=>{ editor=monaco.editor.create(document.getElementById('editor'),{value:defaultCode,language:'solidity',theme:'vs-dark',fontSize:12,minimap:{enabled:false}}); });
 
-function log(m){ const l=document.getElementById('log'); l.innerHTML+=`<br>> ${m}`; l.scrollTop=l.scrollHeight; }
+function log(m){ const l=document.getElementById('log'); l.innerHTML+=`\n> ${m}`; l.scrollTop=l.scrollHeight; }
 
-async function connect(){
-  if(!window.ethereum){ log('Please open this link inside MetaMask / Trust Wallet browser app'); return; }
-  try{
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    await window.ethereum.request({method:'eth_requestAccounts'});
-    await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+(777).toString(16),chainName:'NGN Chain',rpcUrls:['https://ngn-chain.onrender.com'],nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},blockExplorerUrls:['https://ngn-chain.onrender.com']}]});
-    signer = provider.getSigner();
-    const addr = await signer.getAddress();
-    document.getElementById('status').innerText = addr.slice(0,6)+'...'+addr.slice(-4)+' CONNECTED';
-    log('Connected: '+addr);
-    log('NGN Chain 777 added ✅');
-  }catch(e){ log('Connect error: '+e.message); }
-}
+window.addEventListener('load',()=>{
+  if(window.appKit){
+    window.appKit.subscribeProviders(e=>{
+      if(e['eip155:777']){ document.getElementById('status').innerText = e['eip155:777'].address.slice(0,6)+'...'+e['eip155:777'].address.slice(-4)+' CONNECTED'; log('Connected: '+e['eip155:777'].address); }
+    })
+  }
+})
 
 async function compile(){
-  log('Compiling on server...');
+  log('Compiling...');
   const res = await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});
   const out = await res.json();
-  if(out.errors){ out.errors.forEach(e=>log(e.formattedMessage)); if(out.errors.some(x=>x.severity=='error')) return; }
-  compiled = out.contracts['NGN.sol']['NGN'];
-  log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes - Ready to deploy`);
+  if(out.errors){ out.errors.forEach(e=>log(e.formattedMessage||e.message)); if(out.errors.some(x=>x.severity=='error')) return; }
+  compiled = out.contracts['NGN.sol']['NGN'] || Object.values(Object.values(out.contracts)[0])[0];
+  log(`COMPILED ✅ ${compiled.evm.bytecode.object.length/2} bytes`);
 }
-
 async function deploy(){
-  if(!compiled){ log('Compile first!'); return; }
-  if(!signer){ log('Connect wallet first!'); return; }
+  if(!compiled){ log('Compile first'); return; }
   try{
-    log('Deploying to NGN 777...');
-    const factory = new ethers.ContractFactory(compiled.abi, compiled.evm.bytecode.object, signer);
+    const signer = await window.getSigner();
+    if(!signer){ log('Connect wallet first'); window.openConnect(); return; }
+    const { ContractFactory } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.2/+esm');
+    log('Deploying...');
+    const factory = new ContractFactory(compiled.abi, '0x'+compiled.evm.bytecode.object, signer);
     const c = await factory.deploy();
-    log('Tx: '+c.deployTransaction.hash);
-    await c.deployed();
-    log('DEPLOYED ✅ ADDRESS: '+c.address);
-    log('SAVE THIS ADDRESS - This is your token!');
+    log('Tx: '+c.deploymentTransaction().hash);
+    await c.waitForDeployment();
+    log('DEPLOYED ✅ '+await c.getAddress());
   }catch(e){ log('Deploy error: '+e.message); }
 }
 </script>
