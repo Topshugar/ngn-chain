@@ -1,6 +1,6 @@
 // ============================================
-// NGN CHAIN 777 - Persistent Mainnet Server
-// FINAL FIXED COMPILE + LOGO + BRAND
+// NGN CHAIN 777 - 538 TRILLION GENESIS
+// Persistent Mainnet + Faucet Reset
 // ============================================
 
 const express = require('express');
@@ -9,6 +9,7 @@ const ganache = require('ganache');
 const path = require('path');
 const solc = require('solc');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const CHAIN_ID = 777;
@@ -17,6 +18,9 @@ const MNEMONIC = process.env.MNEMONIC || "abandon abandon abandon abandon abando
 const FAUCET_AMOUNT_HEX = '0x56BC75E2D63100000';
 const FAUCET_AMOUNT_LABEL = '100 NGN';
 const FAUCET_COOLDOWN = 24 * 60 * 60 * 1000;
+
+// 538 TRILLION NGN in wei hex
+const GENESIS_BALANCE_HEX = '0x' + (BigInt('538000000000000') * BigInt(10)**BigInt(18)).toString(16);
 
 function getLogoSVG(size = 256) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#008751"/><stop offset="100%" stop-color="#0a3d2e"/></linearGradient></defs><circle cx="128" cy="128" r="120" fill="url(#g)" stroke="#FFD700" stroke-width="6"/><path d="M128 40 L184 72 L184 136 L128 168 L72 136 L72 72 Z" fill="none" stroke="white" stroke-opacity="0.25" stroke-width="6" stroke-linejoin="round"/><text x="128" y="145" font-family="Inter, Arial Black, sans-serif" font-weight="900" font-size="88" fill="white" text-anchor="middle" letter-spacing="-3">NGN</text><g><rect x="78" y="168" width="100" height="28" rx="14" fill="#FFD700"/><text x="128" y="187" font-family="Inter, monospace" font-weight="800" font-size="20" fill="#0a3d2e" text-anchor="middle">777</text></g></svg>`;
@@ -28,12 +32,25 @@ if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
 app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'] }));
 app.use(express.json({ limit: '5mb' }));
 
+// Generate 10 deterministic accounts with 538T each
+function genAccounts() {
+  const accs = [];
+  for (let i=0; i<10; i++) {
+    const secretKey = '0x' + crypto.createHash('sha256').update(MNEMONIC + i).digest('hex');
+    accs.push({ secretKey, balance: GENESIS_BALANCE_HEX });
+  }
+  return accs;
+}
+
 const ganacheServer = ganache.server({
   chain: { chainId: CHAIN_ID, networkId: CHAIN_ID, hardfork: 'shanghai' },
-  wallet: { mnemonic: MNEMONIC, totalAccounts: 10, defaultBalance: 10000, hdPath: `m/44'/${CHAIN_ID}'/0'/0/` },
+  wallet: { 
+    accounts: genAccounts(),
+    // keep hdPath for compatibility
+  },
   miner: { blockTime: 3, instamine: 'eager' },
   database: { dbPath: DB_PATH },
-  logging: { quiet: true }
+  logging: { quiet: false }
 });
 const provider = ganacheServer.provider;
 
@@ -59,11 +76,35 @@ app.get('/logo.svg', (req, res) => { res.setHeader('Content-Type','image/svg+xml
 app.get('/logo.png', (req, res) => { res.setHeader('Content-Type','image/svg+xml'); res.send(getLogoSVG(512)); });
 app.get('/favicon.ico', (req, res) => { res.setHeader('Content-Type','image/svg+xml'); res.send(getLogoSVG(64)); });
 
-app.get('/health', (req, res) => res.json({ status:'live', chain:'NGN Chain 777', chainId:CHAIN_ID, logo:'/logo.svg' }));
+app.get('/health', (req, res) => res.json({ status:'live', chain:'NGN Chain 777', chainId:CHAIN_ID, balance:'538T NGN per genesis', logo:'/logo.svg' }));
 app.get('/api/stats', async (req, res) => {
   const blockNumber = await provider.request({ method: 'eth_blockNumber', params: [] });
   const accounts = await provider.request({ method: 'eth_accounts', params: [] });
-  res.json({ chainId: CHAIN_ID, blockNumber: parseInt(blockNumber,16), genesisAccounts: accounts.length });
+  const bal = await provider.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] });
+  res.json({ chainId: CHAIN_ID, blockNumber: parseInt(blockNumber,16), genesisAccounts: accounts.length, faucetBankBalance: bal, faucetBankBalanceNGN: parseInt(bal,16)/1e18 });
+});
+
+// ADMIN: Nuke DB and reset chain to 538T
+app.get('/admin/nuke-db', (req, res) => {
+  try {
+    fs.rmSync(DB_PATH, { recursive: true, force: true });
+    fs.mkdirSync(DB_PATH, { recursive: true });
+    res.send('DB DELETED. Now go to Render Dashboard -> Manual Deploy -> Restart. Chain will restart with 538T NGN.');
+  } catch(e) { res.send('Error: ' + e.message); }
+});
+
+app.get('/admin/reset-faucet/:address', (req, res) => {
+  const addr = req.params.address.toLowerCase();
+  faucetClaimedByAddress.delete(addr);
+  saveFaucetDB();
+  res.json({ reset: addr, ok: true });
+});
+
+app.get('/admin/reset-all-faucet', (req, res) => {
+  faucetClaimedByAddress.clear();
+  faucetClaimedByIP.clear();
+  saveFaucetDB();
+  res.json({ ok: true, msg: 'All faucet limits cleared' });
 });
 
 // ============ COMPILE FIXED ============
@@ -102,8 +143,12 @@ app.post('/faucet', async (req, res) => {
     faucetClaimedByAddress.set(low, Date.now());
     faucetClaimedByIP.set(ip, Date.now());
     saveFaucetDB();
+    console.log(`[FAUCET] 100 NGN -> ${address} tx:${txHash}`);
     res.json({ success:true, txHash, amount:FAUCET_AMOUNT_LABEL });
-  } catch(e) { res.status(500).json({ error:e.message }); }
+  } catch(e) { 
+    console.log('[FAUCET ERROR]', e.message);
+    res.status(500).json({ error:e.message }); 
+  }
 });
 
 function brandHTML(filePath) {
@@ -127,4 +172,4 @@ app.post('/', async (req,res) => {
   } catch(e) { res.json({ jsonrpc:'2.0', id:req.body?.id||1, error:{ code:e.code||-32000, message:e.message } }); }
 });
 
-app.listen(PORT,'0.0.0.0', () => console.log(`NGN 777 LIVE FIXED COMPILE on ${PORT}`));
+app.listen(PORT,'0.0.0.0', () => console.log(`NGN 777 LIVE 538T on ${PORT}`));
