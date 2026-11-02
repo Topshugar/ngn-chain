@@ -31,7 +31,7 @@
 <div id="panel-wallet" class="panel">
 <div class="card"><div class="label">NGN Special Wallet Generator <span class="tag">CHAIN 777 ONLY</span></div><div class="hint">Path: <b>m/44'/777'/0'/0/0</b> - Native to NGN Chain, not Ethereum. Different address even with same seed.</div><button class="btn primary" onclick="generateNGNWallet()">GENERATE NGN SPECIAL WALLET</button><button class="btn" onclick="generateBulk()">GENERATE 5 WALLETS FOR USERS</button></div>
 <div class="card"><div class="label">Mnemonic - SECRET</div><div class="value" id="w-mnemonic">Click Generate</div><button class="btn small" onclick="copy('w-mnemonic')">COPY</button></div>
-<div class="card"><div class="label">NGN Address</div><div class="value" id="w-address">-</div><button class="btn small" onclick="copy('w-address')">COPY</button><button class="btn small" onclick="checkBalance()">CHECK BALANCE</button></div>
+<div class="card"><div class="label">NGN Address</div><div class="value" id="w-address">-</div><button class="btn small" onclick="copy('w-address')">COPY</button><button class="btn small" onclick="checkBalance()">CHECK BALANCE</button><button class="btn small" onclick="claimFaucet()" style="background:#b7ff00;color:#000">CLAIM 100 NGN FAUCET</button></div>
 <div class="card"><div class="label">Private Key - SECRET</div><div class="value" id="w-pkey">-</div><button class="btn small" onclick="copy('w-pkey')">COPY</button></div>
 <div class="card"><div class="label">Bulk</div><div class="value" id="w-bulk">No bulk yet</div></div>
 </div>
@@ -53,6 +53,19 @@ function copy(id){navigator.clipboard.writeText(document.getElementById(id).inne
 function generateNGNWallet(){const mnemonic=ethers.utils.entropyToMnemonic(ethers.utils.randomBytes(16));const wallet=ethers.Wallet.fromMnemonic(mnemonic,NGN_PATH);currentWallet=wallet;document.getElementById('w-mnemonic').innerText=mnemonic;document.getElementById('w-address').innerText=wallet.address;document.getElementById('w-pkey').innerText=wallet.privateKey;log('Generated NGN Wallet: '+wallet.address);}
 function generateBulk(){let html='';for(let i=0;i<5;i++){const m=ethers.utils.entropyToMnemonic(ethers.utils.randomBytes(16));const w=ethers.Wallet.fromMnemonic(m,`m/44'/777'/0'/${i}/0`);html+=`<div style="border-bottom:1px solid #222;padding:6px 0"><b>${i+1}. ${w.address}</b><br><span style="color:#666;font-size:10px">${m}</span></div>`;}document.getElementById('w-bulk').innerHTML=html;}
 async function checkBalance(){if(!currentWallet)return alert('Generate first');try{const prov=new ethers.providers.JsonRpcProvider('https://ngn-chain.onrender.com');const bal=await prov.getBalance(currentWallet.address);alert('Balance: '+ethers.utils.formatEther(bal)+' NGN');}catch(e){alert(e.message);}}
+async function claimFaucet(){
+  if(!currentWallet) return alert('Generate wallet first');
+  const addr=currentWallet.address;
+  const logEl=document.getElementById('w-bulk');
+  logEl.innerHTML='Claiming 100 NGN for '+addr+'...';
+  try{
+    const res=await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address: addr})});
+    const out=await res.json();
+    if(out.error) throw new Error(out.error);
+    logEl.innerHTML=`<div style="color:#b7ff00">SUCCESS! 100 NGN sent</div><div style="margin-top:6px">Tx: ${out.txHash}</div><div>To: ${out.to}</div>`;
+    alert('100 NGN claimed! Tx: '+out.txHash);
+  }catch(e){ logEl.innerHTML='Faucet Error: '+e.message; }
+}
 async function connectWallet(){if(!window.ethereum){alert('Open in Trust Wallet');return;}try{provider=new ethers.providers.Web3Provider(window.ethereum,'any');await window.ethereum.request({method:'eth_requestAccounts'});try{await window.ethereum.request({method:'wallet_addEthereumChain',params:[CHAIN_PARAMS]});}catch(e){}await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:CHAIN_PARAMS.chainId}]});signer=provider.getSigner();const addr=await signer.getAddress();setStatus(addr.slice(0,6)+'...'+addr.slice(-4)+' CONNECTED');log('Connected '+addr);}catch(e){log('Failed '+e.message);}}
 async function compileCode(){log('Compiling...');try{const res=await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:editor.getValue()})});const out=await res.json();const fileKey=Object.keys(out.contracts)[0];const contractKey=Object.keys(out.contracts[fileKey])[0];compiled=out.contracts[fileKey][contractKey];log('Compiled');}catch(e){log('Error '+e.message);}}
 async function deployContract(){if(!compiled){log('Compile first');return;}if(!signer){log('Connect wallet');return;}try{log('Deploying...');const f=new ethers.ContractFactory(compiled.abi,compiled.evm.bytecode.object,signer);const c=await f.deploy();log('Tx '+c.deployTransaction.hash);await c.deployed();log('DEPLOYED '+c.address);}catch(e){log('Failed '+e.message);}}
