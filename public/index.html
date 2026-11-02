@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NGN Chain 777 • Mobile-First L1 for Everyone</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -11,6 +12,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif}
 .top{position:sticky;top:0;z-index:20;backdrop-filter:blur(20px);background:rgba(5,5,7,0.85);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .logo{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
+.logo img{width:28px;height:28px;border-radius:8px}
 .dot{width:28px;height:28px;background:var(--lime);border-radius:8px;display:grid;place-items:center;color:#000;font-weight:800}
 .nav{display:flex;gap:8px}
 .btn{border:0;border-radius:999px;padding:10px 18px;font-family:'JetBrains Mono';font-weight:700;font-size:11px;cursor:pointer;text-decoration:none;text-align:center}
@@ -41,7 +43,7 @@
 </head>
 <body>
 <div class="top">
-<div class="logo"><div class="dot">N</div> NGN • 777</div>
+<div class="logo"><img src="/logo.svg" alt="NGN"> NGN • 777</div>
 <div class="nav">
 <a href="/explorer/index.html" class="btn btn-g">EXPLORER</a>
 <a href="/studio/index.html" class="btn btn-l">STUDIO</a>
@@ -83,6 +85,7 @@
 <div class="chain"><b>CHAIN ID</b>777 (0x309)</div>
 <div class="chain"><b>NATIVE SYMBOL</b>NGN</div>
 <div class="chain"><b>EXPLORER</b>/explorer/index.html</div>
+<div class="chain"><b>LOGO</b>https://ngn-chain.onrender.com/logo.svg</div>
 <button class="btn btn-w" style="width:100%;margin-top:14px;padding:14px" onclick="addChain()">ADD TO WALLET IN 1 CLICK</button>
 </div>
 
@@ -104,12 +107,19 @@ ChainId 777 • Native Path m/44'/777'/0'/0/0 • Open Source<br><br>
 <script>
 const RPC='https://ngn-chain.onrender.com';
 async function addChain(){
-  const params={chainId:'0x309',chainName:'NGN Chain 777',nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},rpcUrls:[RPC],blockExplorerUrls:[RPC]};
+  const params={
+    chainId:'0x309',
+    chainName:'NGN Chain 777 Mainnet',
+    nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},
+    rpcUrls:[RPC],
+    blockExplorerUrls:[RPC+'/explorer'],
+    iconUrls:[RPC+'/logo.svg']
+  };
   try{
     if(!window.ethereum) return alert('Open inside Trust Wallet or MetaMask browser');
     await window.ethereum.request({method:'wallet_addEthereumChain',params:[params]});
     await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x309'}]});
-    alert('NGN Chain 777 Added ✓');
+    alert('NGN Chain 777 Added with logo ✓');
   }catch(e){ alert(e.message); }
 }
 async function loadLive(){
