@@ -7,7 +7,6 @@ const solc = require('solc');
 const app = express();
 app.use(cors());
 app.use(express.json({limit: '5mb'}));
-app.use(express.static(path.join(__dirname, 'public')));
 
 const YOUR_CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
@@ -15,14 +14,14 @@ const PORT = process.env.PORT || 10000;
 const ganacheServer = ganache.server({
   chain: { chainId: YOUR_CHAIN_ID, networkId: YOUR_CHAIN_ID },
   wallet: {
-    mnemonic: "ngn chain naira nigeria blockchain top shugar 2024 free permanent live",
+    mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
     totalAccounts: 10,
     defaultBalance: 10000
   },
   logging: { quiet: true }
 });
 
-ganacheServer.listen(8545, () => console.log(`Chain 777 running`));
+ganacheServer.listen(8545, () => console.log('Chain 777 running'));
 
 app.post('/compile', (req, res) => {
   try {
@@ -34,15 +33,15 @@ app.post('/compile', (req, res) => {
     };
     const output = JSON.parse(solc.compile(JSON.stringify(input)));
     res.json(output);
-  } catch(e){ res.status(500).json({error: e.message}) }
+  } catch(e){ 
+    res.status(500).json({error: e.message}); 
+  }
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/studio', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'studio', 'index.html'));
-});
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.post('/', (req, res) => {
