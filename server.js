@@ -1,8 +1,3 @@
-/**
- * NGN Chain 777 - EVM Layer 1
- * Chain ID: 777
- */
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -14,12 +9,11 @@ const CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
 const FAUCET_AMOUNT = ethers.parseEther("100");
 const GENESIS_SUPPLY = ethers.parseEther("987000000000000");
-
 const MNEMONIC = "test test test test test test test test test test test junk";
 
-const wallets = Array.from({ length: 10 }, (_, i) => 
+const wallets = Array.from({ length: 10 }, (_, i) =>
   ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(MNEMONIC), 
+    ethers.Mnemonic.fromPhrase(MNEMONIC),
     `m/44'/60'/0'/0/${i}`
   )
 );
@@ -32,6 +26,7 @@ accounts.forEach((addr, idx) => {
 
 let blockNumber = 355;
 const txStore = {};
+const verifiedContracts = {};
 
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '5mb' }));
@@ -45,7 +40,8 @@ app.get('/api/stats', (req, res) => {
     chainId: CHAIN_ID,
     blockNumber,
     validators: accounts.length,
-    faucet: "active"
+    faucet: "active",
+    verified: Object.keys(verifiedContracts).length
   });
 });
 
@@ -74,6 +70,48 @@ app.post('/compile', (req, res) => {
   }
 });
 
+app.post('/api/verify', (req, res) => {
+  try {
+    const { address, source, contractName } = req.body;
+    if (!address || !source) return res.status(400).json({ error: 'address and source required' });
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return res.status(400).json({ error: 'Invalid address' });
+    const input = {
+      language: 'Solidity',
+      sources: { 'Contract.sol': { content: source } },
+      settings: {
+        optimizer: { enabled: true, runs: 200 },
+        outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } }
+      }
+    };
+    const output = JSON.parse(solc.compile(JSON.stringify(input)));
+    if (output.errors) {
+      const err = output.errors.filter(e => e.severity === 'error');
+      if (err.length) return res.status(400).json({ error: err[0].formattedMessage });
+    }
+    const contracts = output.contracts['Contract.sol'];
+    const name = contractName || Object.keys(contracts)[0];
+    const compiled = contracts[name];
+    if (!compiled) return res.status(400).json({ error: 'Contract not found' });
+    verifiedContracts[address.toLowerCase()] = {
+      address: address.toLowerCase(),
+      contractName: name,
+      source,
+      abi: compiled.abi,
+      bytecode: '0x' + compiled.evm.bytecode.object,
+      verifiedAt: Date.now()
+    };
+    res.json({ success: true, ...verifiedContracts[address.toLowerCase()] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/contract/:address', (req, res) => {
+  const c = verifiedContracts[req.params.address.toLowerCase()];
+  if (!c) return res.status(404).json({ verified: false });
+  res.json({ verified: true, ...c });
+});
+
 app.post('/faucet', (req, res) => {
   try {
     const { address } = req.body;
@@ -98,17 +136,35 @@ app.post('/', (req, res) => {
   try {
     let result;
     switch (method) {
-      case 'eth_chainId': result = '0x' + CHAIN_ID.toString(16); break;
-      case 'net_version': result = CHAIN_ID.toString(); break;
-      case 'eth_blockNumber': result = '0x' + blockNumber.toString(16); break;
-      case 'eth_accounts': result = accounts; break;
+      case 'eth_chainId':
+        result = '0x' + CHAIN_ID.toString(16);
+        break;
+      case 'net_version':
+        result = CHAIN_ID.toString();
+        break;
+      case 'eth_blockNumber':
+        result = '0x' + blockNumber.toString(16);
+        break;
+      case 'eth_accounts':
+        result = accounts;
+        break;
       case 'eth_getBalance': {
         const bal = balances[params[0].toLowerCase()] || 0n;
         result = '0x' + bal.toString(16);
         break;
       }
-      case 'eth_gasPrice': result = '0x3B9ACA00'; break;
-      case 'eth_estimateGas': result = '0x5208'; break;
+      case 'eth_getCode': {
+        const addr = params[0].toLowerCase();
+        const verified = verifiedContracts[addr];
+        result = verified ? verified.bytecode : '0x';
+        break;
+      }
+      case 'eth_gasPrice':
+        result = '0x3B9ACA00';
+        break;
+      case 'eth_estimateGas':
+        result = '0x5208';
+        break;
       case 'eth_sendTransaction': {
         const tx = params[0];
         const from = tx.from.toLowerCase();
@@ -123,14 +179,19 @@ app.post('/', (req, res) => {
         result = hash;
         break;
       }
-      case 'eth_getTransactionByHash': result = txStore[params[0]] || null; break;
+      case 'eth_getTransactionByHash':
+        result = txStore[params[0]] || null;
+        break;
       case 'eth_getTransactionReceipt': {
         const tx = txStore[params[0]];
         result = tx ? { transactionHash: params[0], status: '0x1', blockNumber: '0x' + blockNumber.toString(16) } : null;
         break;
       }
-      case 'eth_call': result = '0x'; break;
-      default: result = '0x0';
+      case 'eth_call':
+        result = '0x';
+        break;
+      default:
+        result = '0x0';
     }
     res.json({ jsonrpc: '2.0', id, result });
   } catch (err) {
