@@ -1,7 +1,6 @@
 /**
- * NGN Chain 777 - Layer 1 EVM
- * Chain ID: 777 | Native: NGN |
- * Production Node - Render
+ * NGN Chain 777 - EVM Layer 1
+ * Chain ID: 777
  */
 
 const express = require('express');
@@ -13,8 +12,8 @@ const solc = require('solc');
 const app = express();
 const CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
-const FAUCET_DISBURSEMENT = ethers.parseEther("100");
-const GENESIS_LIQUIDITY = ethers.parseEther("987000000000000");
+const FAUCET_AMOUNT = ethers.parseEther("100");
+const GENESIS_SUPPLY = ethers.parseEther("987000000000000");
 
 const MNEMONIC = "test test test test test test test test test test test junk";
 
@@ -28,32 +27,25 @@ const wallets = Array.from({ length: 10 }, (_, i) =>
 const accounts = wallets.map(w => w.address);
 const balances = {};
 accounts.forEach((addr, idx) => {
-  balances[addr.toLowerCase()] = idx === 0 ? GENESIS_LIQUIDITY : ethers.parseEther("100000");
+  balances[addr.toLowerCase()] = idx === 0 ? GENESIS_SUPPLY : ethers.parseEther("100000");
 });
 
 let blockNumber = 355;
-const transactionPool = {};
+const txStore = {};
 
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'operational', 
-    network: 'NGN Chain 777', 
-    chainId: CHAIN_ID, 
-    blockHeight: blockNumber 
-  });
+  res.json({ status: 'operational', chainId: CHAIN_ID, blockNumber });
 });
 
 app.get('/api/stats', (req, res) => {
   res.json({
     chainId: CHAIN_ID,
     blockNumber,
-    validatorCount: accounts.length,
-    faucetStatus: "active",
-    faucetAmount: "100 NGN",
-    network: "mainnet"
+    validators: accounts.length,
+    faucet: "active"
   });
 });
 
@@ -73,38 +65,35 @@ app.post('/compile', (req, res) => {
       const errors = output.errors.filter(e => e.severity === 'error');
       if (errors.length) return res.status(400).json({ error: errors[0].formattedMessage });
     }
-    const contractFile = output.contracts['Contract.sol'];
-    const contractName = Object.keys(contractFile)[0];
-    const contract = contractFile[contractName];
-    res.json({ abi: contract.abi, bytecode: '0x' + contract.evm.bytecode.object, contractName });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const file = output.contracts['Contract.sol'];
+    const name = Object.keys(file)[0];
+    const contract = file[name];
+    res.json({ abi: contract.abi, bytecode: '0x' + contract.evm.bytecode.object, contractName: name });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.post('/faucet', async (req, res) => {
+app.post('/faucet', (req, res) => {
   try {
     const { address } = req.body;
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return res.status(400).json({ error: 'Invalid EVM address' });
+      return res.status(400).json({ error: 'Invalid address' });
     }
-    const recipient = address.toLowerCase();
-    const treasury = accounts[0].toLowerCase();
-
-    balances[treasury] -= FAUCET_DISBURSEMENT;
-    balances[recipient] = (balances[recipient] || 0n) + FAUCET_DISBURSEMENT;
+    const to = address.toLowerCase();
+    const from = accounts[0].toLowerCase();
+    balances[from] -= FAUCET_AMOUNT;
+    balances[to] = (balances[to] || 0n) + FAUCET_AMOUNT;
     blockNumber++;
-
-    const txHash = ethers.keccak256(ethers.toUtf8Bytes(`${Date.now()}${address}${Math.random()}`));
-    transactionPool[txHash] = { hash: txHash, from: accounts[0], to: address, value: FAUCET_DISBURSEMENT.toString() };
-
-    res.json({ success: true, txHash, amount: '100 NGN' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const hash = ethers.keccak256(ethers.toUtf8Bytes(`${Date.now()}${address}${Math.random()}`));
+    txStore[hash] = { hash, from: accounts[0], to: address, value: FAUCET_AMOUNT.toString() };
+    res.json({ success: true, txHash: hash, amount: '100 NGN' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.post('/', async (req, res) => {
+app.post('/', (req, res) => {
   const { method, params, id } = req.body;
   try {
     let result;
@@ -130,14 +119,14 @@ app.post('/', async (req, res) => {
         balances[from] -= value;
         blockNumber++;
         const hash = ethers.keccak256(ethers.toUtf8Bytes(`${Date.now()}${Math.random()}`));
-        transactionPool[hash] = { hash, from: tx.from, to: tx.to, value: value.toString() };
+        txStore[hash] = { hash, from: tx.from, to: tx.to, value: value.toString() };
         result = hash;
         break;
       }
-      case 'eth_getTransactionByHash': result = transactionPool[params[0]] || null; break;
+      case 'eth_getTransactionByHash': result = txStore[params[0]] || null; break;
       case 'eth_getTransactionReceipt': {
-        const tx = transactionPool[params[0]];
-        result = tx ? { transactionHash: params[0], status: '0x1', blockNumber: '0x' + blockNumber.toString(16), gasUsed: '0x5208' } : null;
+        const tx = txStore[params[0]];
+        result = tx ? { transactionHash: params[0], status: '0x1', blockNumber: '0x' + blockNumber.toString(16) } : null;
         break;
       }
       case 'eth_call': result = '0x'; break;
@@ -150,8 +139,7 @@ app.post('/', async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`NGN Chain 777 operational on ${PORT} | Height ${blockNumber}`);
+  console.log(`NGN Chain 777 active | ${PORT}`);
 });
