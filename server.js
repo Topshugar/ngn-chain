@@ -7,39 +7,34 @@ const solc = require('solc');
 const app = express();
 const CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY env required');
+
 const FAUCET_AMOUNT = ethers.parseEther("100");
 const GENESIS_SUPPLY = ethers.parseEther("987000000000000");
-const MNEMONIC = "test test test test test test test test test test test junk";
 
-const wallets = Array.from({ length: 10 }, (_, i) =>
-  ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(MNEMONIC),
-    `m/44'/60'/0'/0/${i}`
-  )
-);
+const genesisWallet = new ethers.Wallet(PRIVATE_KEY);
+const GENESIS_ADDRESS = genesisWallet.address.toLowerCase();
 
-const accounts = wallets.map(w => w.address);
 const balances = {};
-accounts.forEach((addr, idx) => {
-  balances[addr.toLowerCase()] = idx === 0 ? GENESIS_SUPPLY : ethers.parseEther("100000");
-});
+balances[GENESIS_ADDRESS] = GENESIS_SUPPLY;
 
 let blockNumber = 355;
 const txStore = {};
 const verifiedContracts = {};
+const faucetClaims = {};
 
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'operational', chainId: CHAIN_ID, blockNumber });
+  res.json({ status: 'operational', chainId: CHAIN_ID, blockNumber, genesis: GENESIS_ADDRESS });
 });
 
 app.get('/api/stats', (req, res) => {
   res.json({
     chainId: CHAIN_ID,
     blockNumber,
-    validators: accounts.length,
     faucet: "active",
     verified: Object.keys(verifiedContracts).length
   });
@@ -115,16 +110,25 @@ app.get('/api/contract/:address', (req, res) => {
 app.post('/faucet', (req, res) => {
   try {
     const { address } = req.body;
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
       return res.status(400).json({ error: 'Invalid address' });
     }
     const to = address.toLowerCase();
-    const from = accounts[0].toLowerCase();
-    balances[from] -= FAUCET_AMOUNT;
+    const now = Date.now();
+    const lastClaim = faucetClaims[to] || 0;
+    if (now - lastClaim < 24 * 60 * 60 * 1000) {
+      return res.status(429).json({ error: 'Rate limited: 1 claim per 24h' });
+    }
+    if (balances[GENESIS_ADDRESS] < FAUCET_AMOUNT) {
+      return res.status(500).json({ error: 'Faucet empty' });
+    }
+    balances[GENESIS_ADDRESS] -= FAUCET_AMOUNT;
     balances[to] = (balances[to] || 0n) + FAUCET_AMOUNT;
+    faucetClaims[to] = now;
     blockNumber++;
-    const hash = ethers.keccak256(ethers.toUtf8Bytes(`${Date.now()}${address}${Math.random()}`));
-    txStore[hash] = { hash, from: accounts[0], to: address, value: FAUCET_AMOUNT.toString() };
+    const hash = ethers.keccak256(ethers.toUtf8Bytes(`${now}${address}${Math.random()}`));
+    txStore[hash] = { hash, from: GENESIS_ADDRESS, to: address, value: FAUCET_AMOUNT.toString() };
     res.json({ success: true, txHash: hash, amount: '100 NGN' });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -146,7 +150,7 @@ app.post('/', (req, res) => {
         result = '0x' + blockNumber.toString(16);
         break;
       case 'eth_accounts':
-        result = accounts;
+        result = [GENESIS_ADDRESS];
         break;
       case 'eth_getBalance': {
         const bal = balances[params[0].toLowerCase()] || 0n;
@@ -171,6 +175,7 @@ app.post('/', (req, res) => {
         const to = (tx.to || '').toLowerCase();
         const value = tx.value ? BigInt(tx.value) : 0n;
         if ((balances[from] || 0n) < value) throw new Error('Insufficient funds');
+        if (from !== GENESIS_ADDRESS) throw new Error('Unauthorized sender');
         if (to) balances[to] = (balances[to] || 0n) + value;
         balances[from] -= value;
         blockNumber++;
@@ -202,5 +207,5 @@ app.post('/', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`NGN Chain 777 active | ${PORT}`);
+  console.log(`NGN Chain 777 secure | ${PORT} | Genesis: ${GENESIS_ADDRESS}`);
 });
