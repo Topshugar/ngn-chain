@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>NGN Chain 777 • Studio</title>
 <style>
-:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888;--code:#0e0e0e}
+:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888;--code:#0e0e0e;--green:#00c076}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
 .header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card)}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--green),#009624);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:white}
 .header h2{font-size:15px;font-weight:650;letter-spacing:-0.2px}
 .header a{color:#888;text-decoration:none;font-size:12px;border:1px solid var(--border);padding:6px 10px;border-radius:8px}
 .main{flex:1;display:grid;grid-template-columns:1fr 380px;overflow:hidden}
@@ -27,7 +29,7 @@ textarea{flex:1;width:100%;background:var(--code);color:#d6d6d6;border:0;padding
 </head>
 <body>
 <div class="header">
-<h2>NGN Chain 777 • Studio</h2>
+<div class="logo-wrap"><div class="logo-icon">₦</div><h2>NGN Chain 777 • Studio</h2></div>
 <a href="/">Home</a>
 </div>
 
@@ -42,14 +44,8 @@ pragma solidity ^0.8.19;
 
 contract Counter {
     uint256 public count;
-
-    function increment() public {
-        count += 1;
-    }
-
-    function set(uint256 _count) public {
-        count = _count;
-    }
+    function increment() public { count += 1; }
+    function set(uint256 _count) public { count = _count; }
 }
 </textarea>
 </div>
@@ -61,9 +57,7 @@ RPC: https://ngn-chain.onrender.com
 </div>
 <h4 style="border-top:1px solid var(--border)">Constructor Args (optional)</h4>
 <input id="args" class="input" placeholder="e.g. 100" />
-<div class="row">
-<button class="btn sec" style="flex:1" onclick="clearLog()">Clear</button>
-</div>
+<div class="row"><button class="btn sec" style="flex:1" onclick="clearLog()">Clear</button></div>
 </div>
 </div>
 
@@ -71,24 +65,19 @@ RPC: https://ngn-chain.onrender.com
 const $ = id => document.getElementById(id);
 function log(msg){ $('output').innerText += '\n' + msg; $('output').scrollTop = $('output').scrollHeight; }
 function clearLog(){ $('output').innerText='Ready • Chain ID 777'; }
-
 async function compile(){
-  const source = $('code').value;
-  log('> Compiling...');
+  const source = $('code').value; log('> Compiling...');
   try{
     const res = await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source})});
     const data = await res.json();
     if(data.error){ log('Error: '+data.error); return; }
-    log(`Compiled: ${data.contractName}`);
-    log(`Bytecode: ${data.bytecode.slice(0,66)}...`);
+    log(`Compiled: ${data.contractName}`); log(`Bytecode: ${data.bytecode.slice(0,66)}...`);
     window.lastBuild = data;
   }catch(e){ log('Compile failed: '+e.message); }
 }
-
 async function deploy(){
   if(!window.lastBuild){ log('Compile first'); return; }
-  log('> Deploying to 777 (simulated)...');
-  log(`ABI entries: ${window.lastBuild.abi.length}`);
+  log('> Deploying to 777 (simulated)...'); log(`ABI entries: ${window.lastBuild.abi.length}`);
   log('Deployed: 0x'+[...Array(40)].map(()=>Math.floor(Math.random()*16).toString(16)).join(''));
 }
 </script>
