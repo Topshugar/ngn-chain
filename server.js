@@ -4,39 +4,38 @@ const ganache = require('ganache');
 const path = require('path');
 const solc = require('solc');
 const fs = require('fs');
-const crypto = require('crypto');
 
 const app = express();
 const CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
-const MNEMONIC = process.env.MNEMONIC || "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 const FAUCET_AMOUNT_HEX = '0x56BC75E2D63100000';
 const FAUCET_AMOUNT_LABEL = '100 NGN';
 const FAUCET_COOLDOWN = 24 * 60 * 60 * 1000;
 const GENESIS_BALANCE_HEX = '0x' + (BigInt('538000000000000') * BigInt(10)**BigInt(18)).toString(16);
 
-function getLogoSVG(size = 256) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#008751"/><stop offset="100%" stop-color="#0a3d2e"/></linearGradient></defs><circle cx="128" cy="128" r="120" fill="url(#g)" stroke="#FFD700" stroke-width="6"/><path d="M128 40 L184 72 L184 136 L128 168 L72 136 L72 72 Z" fill="none" stroke="white" stroke-opacity="0.25" stroke-width="6" stroke-linejoin="round"/><text x="128" y="145" font-family="Inter, Arial Black, sans-serif" font-weight="900" font-size="88" fill="white" text-anchor="middle" letter-spacing="-3">NGN</text><g><rect x="78" y="168" width="100" height="28" rx="14" fill="#FFD700"/><text x="128" y="187" font-family="Inter, monospace" font-weight="800" font-size="20" fill="#0a3d2e" text-anchor="middle">777</text></g></svg>`;
-}
-
-const DB_PATH = path.join(__dirname, 'ngn-chain-db');
+// STABILITY FIX 1: Use Render Disk path if available, else local
+const POSSIBLE_DISK_PATH = '/opt/render/project/src/data/chain';
+const LOCAL_PATH = path.join(__dirname, 'ngn-chain-db');
+const DB_PATH = fs.existsSync('/opt/render/project/src/data') ? POSSIBLE_DISK_PATH : LOCAL_PATH;
 if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
+console.log(`📁 STABLE DB PATH: ${DB_PATH}`);
+
+function getLogoSVG(size = 256) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#008751"/><stop offset="100%" stop-color="#0a3d2e"/></linearGradient></defs><circle cx="128" cy="128" r="120" fill="url(#g)" stroke="#FFD700" stroke-width="6"/><text x="128" y="145" font-family="Inter, Arial Black, sans-serif" font-weight="900" font-size="88" fill="white" text-anchor="middle" letter-spacing="-3">NGN</text><g><rect x="78" y="168" width="100" height="28" rx="14" fill="#FFD700"/><text x="128" y="187" font-family="Inter, monospace" font-weight="800" font-size="20" fill="#0a3d2e" text-anchor="middle">777</text></g></svg>`;
+}
 
 app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'] }));
 app.use(express.json({ limit: '5mb' }));
 
-function genAccounts() {
-  const accs = [];
-  for (let i=0; i<10; i++) {
-    const secretKey = '0x' + crypto.createHash('sha256').update(MNEMONIC + i).digest('hex');
-    accs.push({ secretKey, balance: GENESIS_BALANCE_HEX });
-  }
-  return accs;
-}
-
+// STABILITY FIX 2: Deterministic accounts — same forever, no crypto hash
 const ganacheServer = ganache.server({
   chain: { chainId: CHAIN_ID, networkId: CHAIN_ID, hardfork: 'shanghai' },
-  wallet: { accounts: genAccounts() },
+  wallet: { 
+    totalAccounts: 10,
+    defaultBalance: 100000,
+    seed: "ngn-chain-777-lagos-stable-v1",
+    deterministic: true
+  },
   miner: { blockTime: 3, instamine: 'eager' },
   database: { dbPath: DB_PATH },
   logging: { quiet: false }
@@ -65,19 +64,19 @@ app.get('/logo.svg', (req, res) => { res.setHeader('Content-Type','image/svg+xml
 app.get('/logo.png', (req, res) => { res.setHeader('Content-Type','image/svg+xml'); res.send(getLogoSVG(512)); });
 app.get('/favicon.ico', (req, res) => { res.setHeader('Content-Type','image/svg+xml'); res.send(getLogoSVG(64)); });
 
-app.get('/health', (req, res) => res.json({ status:'live', chain:'NGN Chain 777', chainId:CHAIN_ID, balance:'538T NGN per genesis', logo:'/logo.svg' }));
+app.get('/health', (req, res) => res.json({ status:'live', chain:'NGN Chain 777', chainId:CHAIN_ID, dbPath: DB_PATH, persistent: fs.existsSync(DB_PATH) }));
 app.get('/api/stats', async (req, res) => {
   const blockNumber = await provider.request({ method: 'eth_blockNumber', params: [] });
   const accounts = await provider.request({ method: 'eth_accounts', params: [] });
   const bal = await provider.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] });
-  res.json({ chainId: CHAIN_ID, blockNumber: parseInt(blockNumber,16), genesisAccounts: accounts.length, faucetBankBalance: bal, faucetBankBalanceNGN: parseInt(bal,16)/1e18 });
+  res.json({ chainId: CHAIN_ID, blockNumber: parseInt(blockNumber,16), genesisAccounts: accounts.length, faucetBankBalance: bal, faucetBankBalanceNGN: parseInt(bal,16)/1e18, dbPath: DB_PATH });
 });
 
 app.get('/admin/nuke-db', (req, res) => {
   try {
     fs.rmSync(DB_PATH, { recursive: true, force: true });
     fs.mkdirSync(DB_PATH, { recursive: true });
-    res.send('DB DELETED. Now go to Render Dashboard -> Manual Deploy -> Restart. Chain will restart with 538T NGN.');
+    res.send('DB DELETED. Restart now.');
   } catch(e) { res.send('Error: ' + e.message); }
 });
 app.get('/admin/reset-faucet/:address', (req, res) => {
@@ -90,28 +89,24 @@ app.get('/admin/reset-all-faucet', (req, res) => {
   faucetClaimedByAddress.clear();
   faucetClaimedByIP.clear();
   saveFaucetDB();
-  res.json({ ok: true, msg: 'All faucet limits cleared' });
+  res.json({ ok: true });
 });
 
 app.post('/compile', (req, res) => {
   try {
     const { source } = req.body;
     if (!source) return res.status(400).json({ error: 'Missing source' });
-    const input = {
-      language: 'Solidity',
-      sources: { 'NGN.sol': { content: source } },
-      settings: { optimizer: { enabled: true, runs: 200 }, outputSelection: { '*': { '*': ['abi','evm.bytecode.object'] } } }
-    };
+    const input = { language: 'Solidity', sources: { 'NGN.sol': { content: source } }, settings: { optimizer: { enabled: true, runs: 200 }, outputSelection: { '*': { '*': ['abi','evm.bytecode.object'] } } } };
     const output = JSON.parse(solc.compile(JSON.stringify(input)));
     if (output.errors) {
       const errs = output.errors.filter(e => e.severity === 'error');
       if (errs.length) return res.status(400).json({ error: errs[0].formattedMessage });
     }
     const file = output.contracts['NGN.sol'];
-    if (!file) return res.status(400).json({ error: 'No contract in file' });
+    if (!file) return res.status(400).json({ error: 'No contract' });
     const name = Object.keys(file)[0];
     const c = file[name];
-    res.json({ abi: c.abi, bytecode: '0x'+c.evm.bytecode.object, contractName: name, contracts: output.contracts });
+    res.json({ abi: c.abi, bytecode: '0x'+c.evm.bytecode.object, contractName: name });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -129,33 +124,14 @@ app.post('/faucet', async (req, res) => {
     faucetClaimedByIP.set(ip, Date.now());
     saveFaucetDB();
     res.json({ success:true, txHash, amount:FAUCET_AMOUNT_LABEL });
-  } catch(e) { 
-    res.status(500).json({ error:e.message }); 
-  }
+  } catch(e) { res.status(500).json({ error:e.message }); }
 });
-
-function brandHTML(filePath) {
-  try {
-    if (!fs.existsSync(filePath)) return null;
-    let html = fs.readFileSync(filePath,'utf8');
-    if (!html.toLowerCase().includes('logo.svg')) html = html.replace('<head>','<head><link rel="icon" href="/logo.svg">');
-    html = html.replace('<div class="dot">N</div>','<img src="/logo.svg" style="width:28px;height:28px;border-radius:8px">');
-    return html;
-  } catch { return null; }
-}
 
 app.use(express.static(path.join(__dirname,'public')));
-
-app.get('/', (req,res) => {
-  const fp = path.join(__dirname,'public','index.html');
-  const b = brandHTML(fp);
-  if(b){ res.setHeader('Content-Type','text/html'); return res.send(b); }
-  res.sendFile(fp);
-});
-
-app.get('/studio', (req,res) => { const fp = path.join(__dirname,'public','studio','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
-app.get('/explorer', (req,res) => { const fp = path.join(__dirname,'public','explorer','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
-app.get('/trader', (req,res) => { const fp = path.join(__dirname,'public','trader','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
+app.get('/', (req,res) => res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/studio', (req,res) => res.sendFile(path.join(__dirname,'public','studio','index.html')));
+app.get('/explorer', (req,res) => res.sendFile(path.join(__dirname,'public','explorer','index.html')));
+app.get('/trader', (req,res) => res.sendFile(path.join(__dirname,'public','trader','index.html')));
 
 app.post('/', async (req,res) => {
   try {
@@ -164,4 +140,4 @@ app.post('/', async (req,res) => {
   } catch(e) { res.json({ jsonrpc:'2.0', id:req.body?.id||1, error:{ code:e.code||-32000, message:e.message } }); }
 });
 
-app.listen(PORT,'0.0.0.0', () => console.log(`NGN 777 LIVE 538T on ${PORT}`));
+app.listen(PORT,'0.0.0.0', () => console.log(`NGN 777 STABLE LIVE on ${PORT} | DB: ${DB_PATH}`));
