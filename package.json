@@ -1,31 +1,18 @@
 {
   "name": "ngn-chain",
-  "version": "1.0.0",
-  "description": "NGN Chain 777 - Mobile-first EVM Layer 1 built in Lagos",
+  "version": "2.0.0",
+  "description": "NGN Chain 777 - Professional EVM without Ganache",
   "main": "server.js",
-  "author": "NGN Chain Team",
-  "license": "MIT",
-  "homepage": "https://ngn-chain.onrender.com",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Topshugar/ngn-chain.git"
-  },
   "engines": {
-    "node": "20.17.0",
-    "npm": "10.0.0"
+    "node": "20.17.0"
   },
   "scripts": {
-    "generate-readme": "node scripts/generate-readme.js",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "ethers": "^6.12.0",
     "express": "^4.18.2",
-    "ganache": "7.9.2",
     "solc": "0.8.19"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
   }
 }
