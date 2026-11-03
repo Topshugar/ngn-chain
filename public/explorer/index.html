@@ -11,18 +11,24 @@ body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;padd
 .header{max-width:1100px;margin:0 auto 16px;display:flex;justify-content:space-between;align-items:center}
 .header h2{font-size:18px;letter-spacing:-0.3px}
 .header a{color:#888;text-decoration:none;font-size:13px;border:1px solid var(--border);padding:8px 12px;border-radius:10px}
-.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 340px;gap:16px}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 380px;gap:16px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
 .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
 .stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #151515;font-size:13px;color:#aaa}
 .stat b{color:#fff}
-.input{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;font-size:13px}
+.input{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;font-size:13px;outline:none}
+.input:focus{border-color:#333}
+textarea.input{font-family:JetBrains Mono,Menlo,monospace;resize:vertical}
 .btn{margin-top:10px;width:100%;padding:11px;background:#fff;color:#000;border:0;border-radius:10px;font-weight:650;font-size:13px;cursor:pointer}
+.btn:disabled{opacity:.5}
 .list{margin-top:12px;max-height:420px;overflow:auto}
-.item{padding:10px 0;border-bottom:1px solid #151515;font-family:monospace;font-size:12px;color:#aaa}
+.item{padding:10px 0;border-bottom:1px solid #151515;font-family:monospace;font-size:12px;color:#aaa;word-break:break-all}
 .item b{color:#fff}
-.note{font-size:12px;color:var(--muted);margin-top:10px;word-break:break-all}
+.note{font-size:12px;color:var(--muted);margin-top:10px;word-break:break-all;white-space:pre-wrap;line-height:1.5}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:7px 12px;border-radius:8px;background:#0f0f0f;border:1px solid var(--border);font-size:12px;color:#888;cursor:pointer}
+.tab.active{background:#fff;color:#000}
 </style>
 </head>
 <body>
@@ -38,18 +44,32 @@ body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;padd
 <div class="stat"><span>Native Token</span><b>NGN</b></div>
 <div class="stat"><span>Block Height</span><b id="block">—</b></div>
 <div class="stat"><span>RPC Status</span><b id="status">—</b></div>
-<div class="stat"><span>Validators</span><b id="vals">—</b></div>
+<div class="stat"><span>Verified Contracts</span><b id="verified">—</b></div>
 
-<div style="margin-top:16px">
-<div class="label">Lookup</div>
-<input id="hash" class="input" placeholder="Tx hash or address (0x...)" />
+<div style="margin-top:18px">
+<div class="tabs">
+<div class="tab active" id="tabSearch" onclick="setTab('search')">Search</div>
+<div class="tab" id="tabVerify" onclick="setTab('verify')">Verify Contract</div>
+</div>
+
+<div id="paneSearch">
+<input id="hash" class="input" placeholder="Tx hash (0x...) or address" />
 <button class="btn" onclick="lookup()">Search</button>
 <div id="result" class="note"></div>
+</div>
+
+<div id="paneVerify" style="display:none">
+<input id="vAddr" class="input" placeholder="Contract address 0x..." />
+<textarea id="vSource" class="input" style="height:160px;margin-top:8px" placeholder="Paste Solidity source"></textarea>
+<input id="vName" class="input" style="margin-top:8px" placeholder="Contract name (optional)" />
+<button class="btn" onclick="verifyContract()">Verify</button>
+<div id="vResult" class="note"></div>
+</div>
 </div>
 </div>
 
 <div class="card">
-<div class="label">Recent Transactions</div>
+<div class="label">Verified Contracts</div>
 <div id="txs" class="list">
 <div class="item">Loading...</div>
 </div>
@@ -57,39 +77,74 @@ body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;padd
 </div>
 
 <script>
+let currentTab='search';
+function setTab(t){
+  currentTab=t;
+  document.getElementById('tabSearch').className = t==='search'?'tab active':'tab';
+  document.getElementById('tabVerify').className = t==='verify'?'tab active':'tab';
+  document.getElementById('paneSearch').style.display = t==='search'?'block':'none';
+  document.getElementById('paneVerify').style.display = t==='verify'?'block':'none';
+}
+
 async function load(){
- try{
-  const r=await fetch('/api/stats'); const j=await r.json();
-  document.getElementById('block').innerText=j.blockNumber;
-  document.getElementById('status').innerText='Operational';
-  document.getElementById('vals').innerText=j.validators ?? '—';
- }catch{
-  document.getElementById('status').innerText='Offline';
- }
+  try{
+    const r=await fetch('/api/stats'); const j=await r.json();
+    document.getElementById('block').innerText=j.blockNumber;
+    document.getElementById('status').innerText='Operational';
+    document.getElementById('verified').innerText=j.verified ?? 0;
+  }catch{
+    document.getElementById('status').innerText='Offline';
+  }
 }
+
 async function lookup(){
- const v=document.getElementById('hash').value.trim();
- const out=document.getElementById('result');
- if(!v){ out.innerText='Enter hash or address'; return; }
- out.innerText='Querying...';
- if(v.length===66){
-   try{
-     const body={jsonrpc:'2.0',id:1,method:'eth_getTransactionByHash',params:[v]};
-     const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-     const data=await res.json();
-     out.innerText = data.result ? JSON.stringify(data.result,null,2) : 'Transaction not found';
-   }catch(e){ out.innerText='Error: '+e.message; }
- }else{
-   try{
-     const body={jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[v,'latest']};
-     const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-     const data=await res.json();
-     out.innerText = data.result ? `Balance: ${data.result}` : 'Address not found or 0';
-   }catch(e){ out.innerText='Error: '+e.message; }
- }
+  const v=document.getElementById('hash').value.trim();
+  const out=document.getElementById('result');
+  if(!v){ out.innerText='Enter hash or address'; return; }
+  out.innerText='Querying...';
+  try{
+    if(v.length===66){
+      const body={jsonrpc:'2.0',id:1,method:'eth_getTransactionByHash',params:[v]};
+      const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const data=await res.json();
+      out.innerText = data.result ? JSON.stringify(data.result,null,2) : 'Transaction not found';
+    }else if(/^0x[a-fA-F0-9]{40}$/.test(v)){
+      const r=await fetch(`/api/contract/${v}`);
+      const j=await r.json();
+      if(j.verified){
+        out.innerText=`Verified: ${j.contractName}\nAddress: ${j.address}\nVerified At: ${new Date(j.verifiedAt).toLocaleString()}\n\nABI:\n${JSON.stringify(j.abi,null,2)}`;
+      }else{
+        const body={jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[v,'latest']};
+        const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const data=await res.json();
+        out.innerText=`Not verified\nBalance: ${data.result || '0x0'}`;
+      }
+    }else{
+      out.innerText='Invalid input';
+    }
+  }catch(e){ out.innerText='Error: '+e.message; }
 }
-// Mock recent list from /api/stats or just show block ticker
-setInterval(load, 5000);
+
+async function verifyContract(){
+  const address=document.getElementById('vAddr').value.trim();
+  const source=document.getElementById('vSource').value;
+  const contractName=document.getElementById('vName').value.trim() || undefined;
+  const out=document.getElementById('vResult');
+  if(!address || !source){ out.innerText='Address and source required'; return; }
+  out.innerText='Verifying...';
+  try{
+    const res=await fetch('/api/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address,source,contractName})});
+    const data=await res.json();
+    if(data.success){
+      out.innerText=`Verified: ${data.contractName}\n${data.address}`;
+      load();
+    }else{
+      out.innerText=`Error: ${data.error}`;
+    }
+  }catch(e){ out.innerText='Error: '+e.message; }
+}
+
+setInterval(load,5000);
 load();
 </script>
 </body>
