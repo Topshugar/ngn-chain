@@ -32,7 +32,6 @@ if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
 app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'] }));
 app.use(express.json({ limit: '5mb' }));
 
-// Generate 10 deterministic accounts with 538T each
 function genAccounts() {
   const accs = [];
   for (let i=0; i<10; i++) {
@@ -44,10 +43,7 @@ function genAccounts() {
 
 const ganacheServer = ganache.server({
   chain: { chainId: CHAIN_ID, networkId: CHAIN_ID, hardfork: 'shanghai' },
-  wallet: { 
-    accounts: genAccounts(),
-    // keep hdPath for compatibility
-  },
+  wallet: { accounts: genAccounts() },
   miner: { blockTime: 3, instamine: 'eager' },
   database: { dbPath: DB_PATH },
   logging: { quiet: false }
@@ -84,7 +80,6 @@ app.get('/api/stats', async (req, res) => {
   res.json({ chainId: CHAIN_ID, blockNumber: parseInt(blockNumber,16), genesisAccounts: accounts.length, faucetBankBalance: bal, faucetBankBalanceNGN: parseInt(bal,16)/1e18 });
 });
 
-// ADMIN: Nuke DB and reset chain to 538T
 app.get('/admin/nuke-db', (req, res) => {
   try {
     fs.rmSync(DB_PATH, { recursive: true, force: true });
@@ -92,14 +87,12 @@ app.get('/admin/nuke-db', (req, res) => {
     res.send('DB DELETED. Now go to Render Dashboard -> Manual Deploy -> Restart. Chain will restart with 538T NGN.');
   } catch(e) { res.send('Error: ' + e.message); }
 });
-
 app.get('/admin/reset-faucet/:address', (req, res) => {
   const addr = req.params.address.toLowerCase();
   faucetClaimedByAddress.delete(addr);
   saveFaucetDB();
   res.json({ reset: addr, ok: true });
 });
-
 app.get('/admin/reset-all-faucet', (req, res) => {
   faucetClaimedByAddress.clear();
   faucetClaimedByIP.clear();
@@ -107,7 +100,6 @@ app.get('/admin/reset-all-faucet', (req, res) => {
   res.json({ ok: true, msg: 'All faucet limits cleared' });
 });
 
-// ============ COMPILE FIXED ============
 app.post('/compile', (req, res) => {
   try {
     const { source } = req.body;
@@ -157,10 +149,36 @@ function brandHTML(filePath) {
     let html = fs.readFileSync(filePath,'utf8');
     if (!html.toLowerCase().includes('logo.svg')) html = html.replace('<head>','<head><link rel="icon" href="/logo.svg">');
     html = html.replace('<div class="dot">N</div>','<img src="/logo.svg" style="width:28px;height:28px;border-radius:8px">');
+    // INJECT TRADER BUTTON INTO HOME PAGE ONLY
+    if (filePath.includes('public'+path.sep+'index.html') || filePath.endsWith(path.sep+'index.html')) {
+      if (!html.includes('/trader.html')) {
+        html = html.replace(/OPEN STUDIO.*?<\/a>/i, (m) => {
+          return m + `\n<a href="/trader.html" style="display:flex;align-items:center;justify-content:center;height:52px;background:#00ff88;color:#000;border-radius:14px;font-weight:800;text-decoration:none;margin-top:10px;letter-spacing:-.02em">OPEN TRADER →</a>`;
+        });
+      }
+    }
     return html;
   } catch { return null; }
 }
+
 app.use(express.static(path.join(__dirname,'public')));
+
+// === TRADER ROUTES - NEW ===
+app.get('/trader', (req,res) => {
+  const p1 = path.join(__dirname,'public','trader.html');
+  const p2 = path.join(__dirname,'trader.html');
+  if (fs.existsSync(p1)) { const b=brandHTML(p1); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} return res.sendFile(p1); }
+  if (fs.existsSync(p2)) return res.sendFile(p2);
+  res.status(404).send('trader.html not found - add it to public/trader.html');
+});
+app.get('/trader.html', (req,res) => {
+  const p1 = path.join(__dirname,'public','trader.html');
+  const p2 = path.join(__dirname,'trader.html');
+  if (fs.existsSync(p1)) { const b=brandHTML(p1); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} return res.sendFile(p1); }
+  if (fs.existsSync(p2)) return res.sendFile(p2);
+  res.status(404).send('trader.html not found - add it to public/trader.html');
+});
+
 app.get('/', (req,res) => { const b=brandHTML(path.join(__dirname,'public','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','index.html')); });
 app.get('/studio', (req,res) => { const b=brandHTML(path.join(__dirname,'public','studio','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','studio','index.html')); });
 app.get('/explorer', (req,res) => { const b=brandHTML(path.join(__dirname,'public','explorer','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','explorer','index.html')); });
