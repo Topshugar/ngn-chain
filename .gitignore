@@ -1,1 +1,34 @@
-ngn-chain-db/
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Env secrets - NEVER commit these
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build / chain data
+ganache-db/
+data/
+chain-data/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Render
+.render/
+dist/
