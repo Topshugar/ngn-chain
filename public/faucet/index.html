@@ -1,55 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NGN Faucet - Free 100 NGN</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain 777 • Faucet</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700&display=swap');
-body{margin:0;background:#000;color:#fff;font-family:'Inter',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.box{width:100%;max-width:480px;background:#111;border:1px solid #222;border-radius:16px;padding:24px;text-align:center}
-h1{font-family:'JetBrains Mono';color:#b7ff00;margin:0 0 10px 0;font-size:22px}
-p{color:#888;font-size:13px;line-height:1.6}
-input{width:100%;background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:14px;font-family:'JetBrains Mono';color:#fff;font-size:12px;margin:16px 0}
-.btn{width:100%;background:#b7ff00;color:#000;border:0;padding:16px;border-radius:999px;font-family:'JetBrains Mono';font-weight:700;font-size:14px;cursor:pointer}
-.btn:disabled{opacity:0.5}
-.log{margin-top:16px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:10px;padding:12px;font-family:'JetBrains Mono';font-size:11px;color:#aaa;text-align:left;min-height:60px;word-break:break-all;white-space:pre-wrap}
-.links{margin-top:20px;display:flex;gap:10px}
-.links a{flex:1;border:1px solid #222;background:#111;color:#fff;padding:10px;border-radius:10px;text-decoration:none;font-family:'JetBrains Mono';font-size:10px;text-align:center}
+:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px}
+h1{font-size:20px;letter-spacing:-0.4px} .sub{font-size:12px;color:var(--muted);margin:6px 0 18px}
+.stats{display:flex;gap:10px;margin-bottom:18px}
+.stat{flex:1;background:#0f0f0f;border:1px solid var(--border);border-radius:12px;padding:10px}
+.stat label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.stat b{font-size:13px}
+.input{width:100%;padding:13px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;color:#fff;font-size:14px;outline:none}
+.btn{width:100%;margin-top:12px;padding:13px;background:#fff;color:#000;border:0;border-radius:12px;font-weight:650;font-size:14px;cursor:pointer}
+.btn:disabled{opacity:.5}
+.msg{margin-top:12px;font-size:12px;color:var(--muted);word-break:break-all;line-height:1.4;min-height:16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.top a{font-size:12px;color:#888;text-decoration:none;border:1px solid var(--border);padding:6px 10px;border-radius:8px}
+ul{margin-top:16px;padding-left:16px;color:var(--muted);font-size:12px;line-height:1.6}
 </style>
 </head>
 <body>
-<div class="box">
-<h1>NGN FAUCET [777]</h1>
-<p>Claim <b style="color:#b7ff00">100 FREE NGN</b> for your NGN Special Wallet.<br>One claim per address per 24h.</p>
-<input id="addr" placeholder="Paste your NGN address 0x..." />
-<button class="btn" id="claimBtn" onclick="claim()">CLAIM 100 NGN →</button>
-<div class="log" id="log">Ready to claim...</div>
-<div class="links">
-<a href="/">← HOME</a>
-<a href="/studio/index.html">STUDIO →</a>
+<div class="card">
+<div class="top">
+<div>
+<h1>Faucet</h1>
+<div class="sub">NGN Chain 777 • 100 NGN per claim</div>
 </div>
+<a href="/">Home</a>
 </div>
+
+<div class="stats">
+<div class="stat"><label>Chain ID</label><b>777</b></div>
+<div class="stat"><label>Block</label><b id="block">—</b></div>
+<div class="stat"><label>Status</label><b id="status">—</b></div>
+</div>
+
+<input id="addr" class="input" placeholder="0x..." autocomplete="off" spellcheck="false" />
+<button id="btn" class="btn" onclick="claim()">Claim 100 NGN</button>
+<div id="msg" class="msg"></div>
+
+<ul>
+<li>Rate limited: 1 claim per address per block</li>
+<li>Native token: NGN (18 decimals)</li>
+<li>RPC: / (POST)</li>
+</ul>
+</div>
+
 <script>
-async function claim(){
-  const address = document.getElementById('addr').value.trim();
-  const logEl = document.getElementById('log');
-  const btn = document.getElementById('claimBtn');
-  if(!address.match(/^0x[a-fA-F0-9]{40}$/)){ logEl.innerText='Invalid address'; return; }
-  btn.disabled=true; btn.innerText='CLAIMING...'; logEl.innerText='Sending 100 NGN to '+address+'...';
-  try{
-    const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
-    const out = await res.json();
-    if(out.error) throw new Error(out.error);
-    logEl.innerText=`SUCCESS!\n\nAmount: 100 NGN\nTo: ${out.to}\nTx: ${out.txHash}\n\nYou can now deploy contracts!`;
-    btn.innerText='CLAIMED ✓';
-  }catch(e){
-    logEl.innerText='Error: '+e.message;
-    btn.disabled=false; btn.innerText='CLAIM 100 NGN →';
-  }
+async function load(){
+ try{
+  const r=await fetch('/api/stats'); const j=await r.json();
+  document.getElementById('block').innerText=j.blockNumber;
+  document.getElementById('status').innerText='Active';
+ }catch{
+  document.getElementById('status').innerText='Offline';
+ }
 }
-const params = new URLSearchParams(location.search);
-if(params.get('address')) document.getElementById('addr').value=params.get('address');
+async function claim(){
+ const addr=document.getElementById('addr').value.trim();
+ const msg=document.getElementById('msg');
+ const btn=document.getElementById('btn');
+ if(!/^0x[a-fA-F0-9]{40}$/.test(addr)){ msg.innerText='Invalid address'; return; }
+ btn.disabled=true; btn.innerText='Processing...'; msg.innerText='';
+ try{
+  const res=await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr})});
+  const data=await res.json();
+  msg.innerText = data.success ? `Success\nTx: ${data.txHash}` : `Error: ${data.error}`;
+  if(data.success) load();
+ }catch{ msg.innerText='Network error'; }
+ finally{ btn.disabled=false; btn.innerText='Claim 100 NGN'; }
+}
+load();
 </script>
 </body>
 </html>
