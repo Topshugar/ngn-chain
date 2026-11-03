@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Trader — NGN Chain 777</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+<style>
+:root{--bg:#070707;--card:#111;--line:#1d1d1d;--green:#00ff88;--muted:#8a8a8a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:Geist,Inter,system-ui}
+.wrap{max-width:480px;margin:0 auto;padding:18px}
+.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid #1f1f1f;background:#0f0f0f;border-radius:999px;padding:6px 10px;font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0}
+.h1{font-size:28px;line-height:1;font-weight:800;letter-spacing:-.04em}
+.bal{font-size:42px;font-weight:900;letter-spacing:-.06em;margin:8px 0}
+.addr{font-family:ui-monospace;font-size:11px;color:var(--green);word-break:break-all}
+.btn{width:100%;height:52px;border-radius:14px;border:0;font-weight:800;cursor:pointer}
+.btn-w{background:#fff;color:#000}.btn-g{background:var(--green);color:#000}
+.btn-o{background:#000;color:#fff;border:1px solid #222}
+.input{width:100%;height:52px;background:#000;border:1px solid var(--line);border-radius:14px;padding:0 14px;color:#fff;margin:8px 0}
+.qr{width:220px;height:220px;background:#fff;border-radius:16px;display:none;margin:14px auto}
+.muted{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.row{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="pill">● LIVE • NGN CHAIN 777 TESTNET • BLOCK #85+</div>
+  <div style="margin:16px 0"><div class="muted">TRADER WALLET</div><div class="h1">THE<br>MOBILE<br>WALLET.</div></div>
+
+  <div class="card">
+    <div class="muted">CHAIN ID 777 • 538T SUPPLY • TEST GAS $0</div>
+    <div id="bal" class="bal">0 NGN</div>
+    <div id="addr" class="addr">Not connected</div>
+    <div style="height:12px"></div>
+    <button class="btn btn-w" onclick="connect()">CONNECT • TRUST WALLET</button>
+    <div class="muted" style="margin-top:10px">⚠️ 100 NGN = free gas only, $0 USD • Not real Naira • Mainnet TBA</div>
+  </div>
+
+  <div class="card">
+    <div class="muted">RECEIVE NGN777</div>
+    <img id="qr" class="qr">
+    <div id="rAddr" class="addr" style="text-align:center"></div>
+    <div style="height:12px"></div>
+    <div class="row"><button class="btn btn-o" onclick="receive()">SHOW QR</button><button class="btn btn-o" onclick="copyAddr()">COPY ADDRESS</button></div>
+  </div>
+
+  <div class="card">
+    <div class="muted">SEND NGN777</div>
+    <input id="to" class="input" placeholder="0x recipient address">
+    <input id="amt" class="input" placeholder="Amount e.g. 10" type="number">
+    <button class="btn btn-g" onclick="send()">SEND NGN777</button>
+    <div id="status" class="muted" style="margin-top:10px;word-break:break-all"></div>
+  </div>
+
+  <div class="muted" style="text-align:center;padding:12px">NGN CHAIN 777 • BUILT IN LAGOS • RPC https://ngn-chain.onrender.com • EXPLORER /explorer</div>
+</div>
+
+<script>
+const RPC="https://ngn-chain.onrender.com";
+const EXPLORER=RPC+"/explorer/index.html";
+let provider,signer,address;
+
+async function connect(){
+  if(!window.ethereum) return alert("Open in Trust Wallet / MetaMask browser");
+  provider=new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts",[]);
+  await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x309",chainName:"NGN Chain 777 Testnet",rpcUrls:[RPC],nativeCurrency:{name:"NGN",symbol:"NGN",decimals:18},blockExplorerUrls:[EXPLORER]}]}).catch(()=>{});
+  signer=await provider.getSigner();
+  address=await signer.getAddress();
+  document.getElementById("addr").textContent=address;
+  const b=await provider.getBalance(address);
+  document.getElementById("bal").textContent=Number(ethers.formatEther(b)).toLocaleString()+" NGN";
+}
+
+function receive(){
+  if(!address) return;
+  const q=document.getElementById("qr");
+  q.src=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${address}`;
+  q.style.display="block";
+  document.getElementById("rAddr").textContent=address;
+}
+
+function copyAddr(){ if(!address) return; navigator.clipboard.writeText(address); document.getElementById("rAddr").textContent="Copied! "+address; }
+
+async function send(){
+  const to=document.getElementById("to").value.trim();
+  const amt=document.getElementById("amt").value.trim();
+  if(!ethers.isAddress(to)) return alert("Invalid address");
+  document.getElementById("status").textContent="Broadcasting...";
+  try{
+    const tx=await signer.sendTransaction({to,value:ethers.parseEther(amt)});
+    document.getElementById("status").textContent=tx.hash+" • Pending";
+    await tx.wait();
+    document.getElementById("status").textContent="Confirmed • "+tx.hash;
+    connect();
+  }catch(e){ document.getElementById("status").textContent=e.message; }
+}
+</script>
+</body>
+</html>
