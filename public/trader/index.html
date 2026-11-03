@@ -1,126 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Trader — NGN Chain 777</title>
-<link rel="icon" href="/logo.svg">
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain 777 • Trader</title>
 <style>
-:root{--bg:#050507;--card:#0f0f11;--line:#1e1e22;--green:#00ff88;--lime:#c8ff00;--muted:#8a8a90}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui}
-.top{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(5,5,7,.9);border-bottom:1px solid var(--line);backdrop-filter:blur(20px)}
-.logo{display:flex;align-items:center;gap:8px;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px}
-.logo img{width:26px;height:26px;border-radius:7px}
-.wrap{max-width:480px;margin:0 auto;padding:14px}
-.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #1f2a1f;background:#0f0f0f;border-radius:999px;padding:7px 12px;font-size:9px;letter-spacing:.1em;color:var(--muted);font-family:JetBrains Mono,monospace}
-.dot{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0}
-.h1{font-size:34px;line-height:.9;font-weight:900;letter-spacing:-.05em;margin:10px 0}
-.h1 span{color:var(--lime)}
-.bal{font-size:42px;font-weight:900;letter-spacing:-.06em;margin:10px 0}
-.addr{font-family:JetBrains Mono,monospace;font-size:11px;color:var(--green);word-break:break-all}
-.btn{width:100%;height:52px;border-radius:14px;border:0;font-weight:800;cursor:pointer;font-family:JetBrains Mono,monospace;font-size:12px}
-.btn-w{background:#fff;color:#000}.btn-g{background:var(--green);color:#000}
-.btn-o{background:#000;color:#fff;border:1px solid #222}
-.input{width:100%;height:52px;background:#000;border:1px solid var(--line);border-radius:14px;padding:0 14px;color:#fff;margin:8px 0;font-size:13px;font-family:JetBrains Mono,monospace}
-.qr{width:220px;height:220px;background:#fff;border-radius:16px;display:none;margin:14px auto}
-.muted{font-size:10px;color:var(--muted);letter-spacing:.08em;font-family:JetBrains Mono,monospace}
-.row{display:flex;gap:10px}
+:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888;--green:#00c076;--red:#ff3b3b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto 16px}
+.top h2{font-size:18px;letter-spacing:-0.3px}
+.top a{color:#888;text-decoration:none;font-size:13px;border:1px solid var(--border);padding:8px 12px;border-radius:10px}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.price{font-size:32px;font-weight:700;letter-spacing:-1px}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #151515;font-size:13px;color:#aaa}
+.row b{color:#fff}
+.input,select{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;margin-top:8px}
+.btn{width:100%;padding:12px;border-radius:10px;border:0;font-weight:650;cursor:pointer;margin-top:10px}
+.buy{background:var(--green);color:#000} .sell{background:var(--red);color:#fff}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:8px 12px;border-radius:10px;background:#0f0f0f;border:1px solid var(--border);font-size:12px;color:#888;cursor:pointer}
+.tab.active{background:#fff;color:#000}
+.note{font-size:12px;color:var(--muted);margin-top:10px;word-break:break-all}
 </style>
 </head>
 <body>
 <div class="top">
-<div class="logo"><img src="/logo.svg"> NGN • 777 <span style="color:#555">/ TRADER</span></div>
-<a href="/" style="color:#fff;text-decoration:none;font-family:JetBrains Mono,monospace;font-size:10px;border:1px solid #222;padding:8px 14px;border-radius:999px">← HOME</a>
+<h2>NGN Chain 777 • Trader</h2>
+<a href="/">Home</a>
 </div>
 
-<div class="wrap">
-  <div class="pill"><span class="dot"></span> LIVE • NGN CHAIN 777 TESTNET • <span id="blk">BLOCK —</span></div>
-  
-  <div style="margin:16px 6px">
-    <div class="muted">TRADER WALLET</div>
-    <div class="h1">THE<br>MOBILE<br><span>WALLET.</span></div>
-  </div>
+<div class="grid">
+<div class="card">
+<div class="label">NGN / USD • Simulated</div>
+<div class="price" id="price">$1.0000</div>
+<div style="height:180px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;margin:12px 0;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px">Chart — TradingView integration ready</div>
+<div class="row"><span>Chain ID</span><b>777</b></div>
+<div class="row"><span>Block</span><b id="block">—</b></div>
+<div class="row"><span>Faucet</span><b>100 NGN</b></div>
+</div>
 
-  <div class="card">
-    <div class="muted">CHAIN ID 777 • 538T SUPPLY • TEST GAS $0</div>
-    <div id="bal" class="bal">0 NGN</div>
-    <div id="addr" class="addr">Not connected</div>
-    <div style="height:12px"></div>
-    <button class="btn btn-w" onclick="connect()">CONNECT • TRUST WALLET</button>
-    <div class="muted" style="margin-top:10px">⚠️ 100 NGN = free gas only, $0 USD • Not real Naira • Mainnet TBA</div>
-  </div>
-
-  <div class="card">
-    <div class="muted">RECEIVE NGN777</div>
-    <img id="qr" class="qr">
-    <div id="rAddr" class="addr" style="text-align:center"></div>
-    <div style="height:12px"></div>
-    <div class="row"><button class="btn btn-o" onclick="receive()">SHOW QR</button><button class="btn btn-o" onclick="copyAddr()">COPY</button></div>
-  </div>
-
-  <div class="card">
-    <div class="muted">SEND NGN777</div>
-    <input id="to" class="input" placeholder="0x recipient">
-    <input id="amt" class="input" placeholder="Amount e.g. 10" type="number">
-    <button class="btn btn-g" onclick="send()">SEND NGN777</button>
-    <div id="status" class="muted" style="margin-top:10px;word-break:break-all;line-height:1.6"></div>
-  </div>
-
-  <div class="muted" style="text-align:center;padding:14px;line-height:1.8">NGN CHAIN 777 • BUILT IN LAGOS<br>RPC https://ngn-chain.onrender.com • <a href="/explorer/index.html" style="color:#c8ff00">explorer</a> • <a href="/studio/index.html" style="color:#fff">studio</a></div>
+<div class="card">
+<div class="tabs">
+<div class="tab active" id="tBuy" onclick="setSide('buy')">Buy</div>
+<div class="tab" id="tSell" onclick="setSide('sell')">Sell</div>
+</div>
+<div class="label">Order Type</div>
+<select id="type"><option>Market</option><option>Limit</option></select>
+<div class="label" style="margin-top:12px">Amount (NGN)</div>
+<input id="amount" class="input" placeholder="100" />
+<div class="label" style="margin-top:12px">Wallet</div>
+<input id="wallet" class="input" placeholder="0x..." />
+<button id="btn" class="btn buy" onclick="exec()">Buy NGN</button>
+<div id="msg" class="note"></div>
+</div>
 </div>
 
 <script>
-const RPC="https://ngn-chain.onrender.com";
-const EXPLORER=RPC+"/explorer/index.html";
-let provider,signer,address;
-
-async function loadBlock(){
-  try{
-    const p=new ethers.JsonRpcProvider(RPC);
-    const n=await p.getBlockNumber();
-    document.getElementById("blk").innerText="BLOCK #"+n;
-  }catch{}
+let side='buy';
+function setSide(s){
+ side=s;
+ document.getElementById('tBuy').className = s==='buy'?'tab active':'tab';
+ document.getElementById('tSell').className = s==='sell'?'tab active':'tab';
+ document.getElementById('btn').className = s==='buy'?'btn buy':'btn sell';
+ document.getElementById('btn').innerText = s==='buy'?'Buy NGN':'Sell NGN';
 }
-loadBlock(); setInterval(loadBlock,4000);
-
-async function connect(){
-  if(!window.ethereum) return alert("Open in Trust Wallet / MetaMask browser");
-  provider=new ethers.BrowserProvider(window.ethereum);
-  await provider.send("eth_requestAccounts",[]);
-  await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x309",chainName:"NGN Chain 777 Testnet",rpcUrls:[RPC],nativeCurrency:{name:"NGN",symbol:"NGN",decimals:18},blockExplorerUrls:[EXPLORER]}]}).catch(()=>{});
-  signer=await provider.getSigner();
-  address=await signer.getAddress();
-  document.getElementById("addr").textContent=address;
-  const b=await provider.getBalance(address);
-  document.getElementById("bal").textContent=Number(ethers.formatEther(b)).toLocaleString()+" NGN";
+async function load(){
+ try{
+  const r=await fetch('/api/stats'); const j=await r.json();
+  document.getElementById('block').innerText=j.blockNumber;
+  document.getElementById('price').innerText='$'+(0.99+Math.random()*0.02).toFixed(4);
+ }catch{}
 }
-
-function receive(){
-  if(!address) return alert("Connect first");
-  const q=document.getElementById("qr");
-  q.src=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${address}`;
-  q.style.display="block";
-  document.getElementById("rAddr").textContent=address;
+async function exec(){
+ const address=document.getElementById('wallet').value.trim();
+ const amount=document.getElementById('amount').value.trim()||'100';
+ if(!/^0x[a-fA-F0-9]{40}$/.test(address)){document.getElementById('msg').innerText='Invalid address';return;}
+ document.getElementById('msg').innerText='Simulating transaction...';
+ try{
+   const res=await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
+   const d=await res.json();
+   document.getElementById('msg').innerText=d.success?`Executed • ${d.txHash}`:`Error: ${d.error}`;
+ }catch{ document.getElementById('msg').innerText='Network error'; }
 }
-
-function copyAddr(){ if(!address) return; navigator.clipboard.writeText(address); document.getElementById("rAddr").textContent="Copied ✓"; }
-
-async function send(){
-  const to=document.getElementById("to").value.trim();
-  const amt=document.getElementById("amt").value.trim();
-  if(!ethers.isAddress(to)) return alert("Invalid address");
-  if(!amt) return alert("Enter amount");
-  document.getElementById("status").textContent="Broadcasting...";
-  try{
-    const tx=await signer.sendTransaction({to,value:ethers.parseEther(amt)});
-    document.getElementById("status").textContent=tx.hash+" • Pending...";
-    await tx.wait();
-    document.getElementById("status").textContent="Confirmed ✓ "+tx.hash;
-    connect();
-  }catch(e){ document.getElementById("status").textContent=e.reason||e.message; }
-}
+setInterval(()=>{document.getElementById('price').innerText='$'+(0.99+Math.random()*0.02).toFixed(4)},3000);
+load();
 </script>
 </body>
 </html>
