@@ -1,45 +1,100 @@
 <!DOCTYPE html>
 <html>
-<head><meta name="viewport" content="width=device-width,initial-scale=1"><title>NGN Miner</title></head>
-<body style="font-family:sans-serif;padding:20px;background:#111;color:#0f0">
-<h2>⛏️ NGN Chain 777 Miner (Satoshi)</h2>
-<input id="addr" style="width:100%;padding:10px" placeholder="0x your wallet"/>
-<button onclick="start()" style="width:100%;padding:15px;margin-top:10px;background:#0f0;font-weight:bold">START MINING</button>
-<button onclick="stop()" style="width:100%;padding:10px;margin-top:5px">STOP</button>
-<pre id="log" style="margin-top:20px;background:#000;padding:10px;white-space:pre-wrap"></pre>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NGN Miner</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#00c076"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="NGN Miner"/>
+<style>
+body{font-family:Inter,sans-serif;padding:16px;background:#0a0a0a;color:#fff;margin:0}
+.card{background:#111;border:1px solid #1f1f1f;border-radius:20px;padding:18px;max-width:480px;margin:0 auto}
+h2{margin:0 0 12px;font-size:20px}
+input{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;border-radius:12px;color:#fff;font-size:14px;box-sizing:border-box}
+.btn{width:100%;padding:15px;margin-top:10px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
+.green{background:#00c076;color:#fff}
+.dark{background:#1a1a1a;color:#ccc;border:1px solid #222}
+#log{margin-top:14px;background:#000;border:1px solid #111;padding:10px;border-radius:12px;height:260px;overflow:auto;font-size:12px;white-space:pre-wrap;color:#0f0}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:10px;text-align:center}
+.stat b{display:block;font-size:14px}
+.stat label{font-size:10px;color:#888;text-transform:uppercase}
+.badge{display:inline-block;background:#00c07620;color:#00c076;border:1px solid #00c07640;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:10px}
+#installBtn{display:none;background:#fff;color:#000}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>⛏️ NGN Miner <span class="badge" id="diffBadge">DIFF 4</span></h2>
+<div class="stats">
+<div class="stat"><label>Height</label><b id="height">—</b></div>
+<div class="stat"><label>Reward</label><b id="reward">50 NGN</b></div>
+<div class="stat"><label>Hashes</label><b id="hashes">0</b></div>
+</div>
+
+<input id="addr" placeholder="0x your wallet (miner)"/>
+
+<button id="installBtn" class="btn" onclick="installPWA()">📲 Install App to Phone</button>
+<button id="mineBtn" class="btn green" onclick="toggle()">START MINING</button>
+<button class="btn dark" onclick="stop()">STOP</button>
+
+<pre id="log">Ready. Enter wallet to start.
+Tip: Add to Home Screen for app mode.</pre>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
 <script>
-let mining=false;
-async function start(){
-  const addr=document.getElementById('addr').value.trim();
-  if(!/^0x[a-fA-F0-9]{40}$/.test(addr)) return alert('Invalid address');
-  mining=true; log(`Mining for ${addr}...`);
-  let diffInfo=await fetch('/api/difficulty').then(r=>r.json());
-  log(`Difficulty: ${diffInfo.difficulty} zeros | Height: ${diffInfo.blockHeight} | Reward: ${diffInfo.reward}`);
-  let nonce=0;
-  while(mining){
-    const parent=diffInfo.parentHash;
-    const ts=Math.floor(Date.now()/1000);
-    const hash=ethers.keccak256(ethers.toUtf8Bytes(`${diffInfo.blockHeight}${parent}${nonce}${ts}`));
-    if(hash.startsWith('0x'+'0'.repeat(diffInfo.difficulty))){
-      log(`FOUND! ${hash} nonce=${nonce} -> submitting...`);
-      const res=await fetch('/api/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({miner:addr,nonce})}).then(r=>r.json());
-      if(res.success){
-        log(`✅ BLOCK ${res.block.number} MINED! +${res.reward} | New Balance: ${res.newBalance} NGN | Hash: ${res.hash}`);
-        diffInfo=await fetch('/api/difficulty').then(r=>r.json());
-      } else {
-        log(`❌ Rejected: ${res.error} - retrying`);
-        diffInfo=await fetch('/api/difficulty').then(r=>r.json());
-      }
-      nonce=0; continue;
-    }
-    nonce++;
-    if(nonce%20000===0) log(`Hashing... ${nonce} attempts | last hash ${hash.slice(0,20)}...`);
-    await new Promise(r=>setTimeout(r,0));
-  }
+let mining=false, totalHashes=0, deferredPrompt=null;
+
+// PWA install
+window.addEventListener('beforeinstallprompt', e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').style.display='block';});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
+
+// Auto fill from ?addr=
+const urlParams=new URLSearchParams(location.search);
+if(urlParams.get('addr')) document.getElementById('addr').value=urlParams.get('addr');
+
+async function getDiff(){const d=await fetch('/api/difficulty').then(r=>r.json());document.getElementById('height').innerText=d.blockHeight;document.getElementById('reward').innerText=d.reward;document.getElementById('diffBadge').innerText='DIFF '+d.difficulty;return d;}
+getDiff(); setInterval(getDiff,10000);
+
+function log(m){const el=document.getElementById('log');el.innerText=m+'\n'+el.innerText;}
+async function toggle(){
+ const btn=document.getElementById('mineBtn');
+ if(mining){ stop(); return; }
+ const addr=document.getElementById('addr').value.trim();
+ if(!/^0x[a-fA-F0-9]{40}$/.test(addr)) return alert('Invalid address');
+ mining=true; btn.innerText='MINING... TAP TO STOP'; btn.style.background='#ff3b30';
+ log(`Mining for ${addr}...`);
+ let diffInfo=await getDiff();
+ let nonce=0;
+ while(mining){
+   const ts=Math.floor(Date.now()/1000);
+   const hash=ethers.keccak256(ethers.toUtf8Bytes(`${diffInfo.blockHeight}${diffInfo.parentHash}${nonce}${ts}`));
+   totalHashes++; nonce++;
+   document.getElementById('hashes').innerText=totalHashes.toLocaleString();
+   if(hash.startsWith('0x'+'0'.repeat(diffInfo.difficulty))){
+     log(`FOUND ${hash.slice(0,22)}... nonce=${nonce}`);
+     try{
+       const res=await fetch('/api/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({miner:addr,nonce})}).then(r=>r.json());
+       if(res.success){
+         log(`✅ BLOCK ${res.block.number} +${res.reward} Bal: ${res.newBalance} NGN`);
+         // haptic feedback on phone
+         if(navigator.vibrate) navigator.vibrate(200);
+         diffInfo=await getDiff();
+         nonce=0;
+       } else {
+         log(`❌ ${res.error} - refreshing chain`);
+         diffInfo=await getDiff();
+       }
+     }catch(e){log('Network error '+e.message)}
+   }
+   if(nonce%30000===0) await new Promise(r=>setTimeout(r,0));
+ }
 }
-function stop(){ mining=false; log('Stopped'); }
-function log(m){ document.getElementById('log').innerText=m+'\n'+document.getElementById('log').innerText; }
+function stop(){mining=false;document.getElementById('mineBtn').innerText='START MINING';document.getElementById('mineBtn').style.background='#00c076';log('Stopped');}
 </script>
 </body>
 </html>
