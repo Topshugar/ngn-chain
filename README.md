@@ -13,6 +13,7 @@ Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RP
 ### Auto-Discovered Routes (Live from /public)
 - https://ngn-chain.onrender.com/explorer
 - https://ngn-chain.onrender.com/faucet
+- https://ngn-chain.onrender.com/miner
 - https://ngn-chain.onrender.com/studio
 - https://ngn-chain.onrender.com/trader
 
