@@ -144,45 +144,18 @@ function brandHTML(filePath) {
   } catch { return null; }
 }
 
-function injectTrader(html) {
-  if (html.includes('/trader.html') || html.includes('OPEN TRADER')) return html;
-  const btn = `<a href="/trader.html" style="display:flex;align-items:center;justify-content:center;height:52px;background:#00ff88;color:#000;border-radius:14px;font-weight:800;text-decoration:none;margin-top:10px;letter-spacing:-.02em">OPEN TRADER →</a>`;
-  if (html.includes('/studio')) return html.replace(/(href="\/studio[^"]*".*?<\/a>)/is, `$1${btn}`);
-  return html.replace('</body>', `${btn}</body>`);
-}
-
 app.use(express.static(path.join(__dirname,'public')));
-
-app.get('/trader', (req,res) => {
-  const p1 = path.join(__dirname,'public','trader.html');
-  const p2 = path.join(__dirname,'trader.html');
-  if (fs.existsSync(p1)) return res.sendFile(p1);
-  if (fs.existsSync(p2)) return res.sendFile(p2);
-  res.status(404).send('Add public/trader.html');
-});
-app.get('/trader.html', (req,res) => {
-  const p1 = path.join(__dirname,'public','trader.html');
-  const p2 = path.join(__dirname,'trader.html');
-  if (fs.existsSync(p1)) return res.sendFile(p1);
-  if (fs.existsSync(p2)) return res.sendFile(p2);
-  res.status(404).send('Add public/trader.html');
-});
 
 app.get('/', (req,res) => {
   const fp = path.join(__dirname,'public','index.html');
-  if (fs.existsSync(fp)) {
-    let html = fs.readFileSync(fp,'utf8');
-    const b = brandHTML(fp);
-    html = b || html;
-    html = injectTrader(html);
-    res.setHeader('Content-Type','text/html');
-    return res.send(html);
-  }
+  const b = brandHTML(fp);
+  if(b){ res.setHeader('Content-Type','text/html'); return res.send(b); }
   res.sendFile(fp);
 });
 
 app.get('/studio', (req,res) => { const fp = path.join(__dirname,'public','studio','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
 app.get('/explorer', (req,res) => { const fp = path.join(__dirname,'public','explorer','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
+app.get('/trader', (req,res) => { const fp = path.join(__dirname,'public','trader','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
 
 app.post('/', async (req,res) => {
   try {
