@@ -20,6 +20,7 @@
 .btn-w{background:#fff;color:#000}
 .btn-l{background:var(--lime);color:#000}
 .btn-g{background:#15151a;color:#fff;border:1px solid #222}
+.btn-trader{background:#00ff88;color:#000}
 .wrap{max-width:520px;margin:0 auto;padding:0 14px}
 .live-banner{background:linear-gradient(90deg,#0f1a00,#0f0f11);border:1px solid #1e2a1e;border-radius:999px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin:14px 6px;font-family:'JetBrains Mono';font-size:10px}
 .live-dot{display:flex;align-items:center;gap:6px;color:var(--green)} .live-dot i{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);display:inline-block}
@@ -51,6 +52,7 @@
 <div class="top">
 <div class="logo"><img src="/logo.svg" alt="NGN"> NGN • 777</div>
 <div class="nav">
+<a href="/trader/index.html" class="btn btn-trader">TRADER</a>
 <a href="/explorer/index.html" class="btn btn-g">EXPLORER</a>
 <a href="/studio/index.html" class="btn btn-l">STUDIO</a>
 </div>
@@ -67,7 +69,11 @@
 <p>NGN Chain 777 is a mobile-first EVM chain built in Lagos for builders without laptops. 538 Trillion NGN genesis, 100 NGN free test gas. Generate wallets, claim gas, deploy contracts — all from your phone.</p>
 <div class="row">
 <a href="/studio/index.html" class="btn btn-l" style="padding:16px">OPEN STUDIO →</a>
+<a href="/trader/index.html" class="btn btn-trader" style="padding:16px">OPEN TRADER →</a>
+</div>
+<div class="row" style="margin-top:10px">
 <a href="/explorer/index.html" class="btn btn-g" style="padding:16px">EXPLORER</a>
+<a href="/trader/index.html" class="btn btn-g" style="padding:16px;border-color:#00ff88;color:#00ff88">TRADE NGN</a>
 </div>
 <div class="stats">
 <div class="stat"><b>777</b><span>CHAIN ID</span></div>
@@ -103,6 +109,7 @@
 <div class="chain"><b>CHAIN ID</b>777 (0x309) • Testnet • 538T Supply</div>
 <div class="chain"><b>NATIVE SYMBOL</b>NGN • Test Gas • $0 USD</div>
 <div class="chain"><b>EXPLORER</b>/explorer/index.html</div>
+<div class="chain"><b>TRADER</b>/trader/index.html</div>
 <div class="chain"><b>LOGO</b>https://ngn-chain.onrender.com/logo.svg</div>
 <div class="chain"><b>FAUCET</b>100 NGN per wallet / 24h • Free gas only</div>
 <button class="btn btn-w" style="width:100%;margin-top:14px;padding:14px" onclick="addChain()">ADD TO WALLET IN 1 CLICK</button>
@@ -120,7 +127,7 @@
 NGN CHAIN 777 • BUILT IN LAGOS • TESTNET<br>
 Total Supply: 538 Trillion NGN • Faucet: 100 NGN Test Gas • $0 USD Value<br>
 Not affiliated with CBN • Not real Naira • Mainnet price TBA<br><br>
-<a href="/studio/index.html" style="color:#c8ff00">studio</a> • <a href="/explorer/index.html">explorer</a> • <a href="/logo.svg">logo</a>
+<a href="/studio/index.html" style="color:#c8ff00">studio</a> • <a href="/trader/index.html" style="color:#00ff88">trader</a> • <a href="/explorer/index.html">explorer</a> • <a href="/logo.svg">logo</a>
 </div>
 </div>
 
@@ -148,7 +155,6 @@ async function loadLive(){
   const num=await provider.getBlockNumber();
   document.getElementById('liveBlock').innerText='Block #'+num+' • Testnet';
   document.getElementById('blockCount').innerText='#'+num;
-  // bank balance
   try{
     const s=await fetch(RPC+'/api/stats').then(r=>r.json());
     if(s.faucetBankBalanceNGN){
