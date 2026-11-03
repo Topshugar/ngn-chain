@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90;--green:#00ff6a;--gold:#FFD700}
+:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90;--green:#00ff6a;--gold:#FFD700;--trader:#00ff88}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif}
 .banner{background:linear-gradient(90deg,#0a3d2e,#008751);border-bottom:1px solid var(--gold);color:#fff;text-align:center;padding:8px 12px;font-family:'JetBrains Mono';font-size:10px}
 .banner b{color:var(--gold)}
@@ -20,7 +20,7 @@
 .btn-w{background:#fff;color:#000}
 .btn-l{background:var(--lime);color:#000}
 .btn-g{background:#15151a;color:#fff;border:1px solid #222}
-.btn-trader{background:#00ff88;color:#000}
+.btn-t{background:var(--trader);color:#000}
 .wrap{max-width:520px;margin:0 auto;padding:0 14px}
 .live-banner{background:linear-gradient(90deg,#0f1a00,#0f0f11);border:1px solid #1e2a1e;border-radius:999px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;margin:14px 6px;font-family:'JetBrains Mono';font-size:10px}
 .live-dot{display:flex;align-items:center;gap:6px;color:var(--green)} .live-dot i{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);display:inline-block}
@@ -52,7 +52,7 @@
 <div class="top">
 <div class="logo"><img src="/logo.svg" alt="NGN"> NGN • 777</div>
 <div class="nav">
-<a href="/trader/index.html" class="btn btn-trader">TRADER</a>
+<a href="/trader/index.html" class="btn btn-t">TRADER</a>
 <a href="/explorer/index.html" class="btn btn-g">EXPLORER</a>
 <a href="/studio/index.html" class="btn btn-l">STUDIO</a>
 </div>
@@ -67,14 +67,12 @@
 <div class="hero">
 <h1>THE<br><span>MOBILE</span><br>CHAIN<i>.</i></h1>
 <p>NGN Chain 777 is a mobile-first EVM chain built in Lagos for builders without laptops. 538 Trillion NGN genesis, 100 NGN free test gas. Generate wallets, claim gas, deploy contracts — all from your phone.</p>
+
 <div class="row">
 <a href="/studio/index.html" class="btn btn-l" style="padding:16px">OPEN STUDIO →</a>
-<a href="/trader/index.html" class="btn btn-trader" style="padding:16px">OPEN TRADER →</a>
+<a href="/trader/index.html" class="btn btn-t" style="padding:16px">OPEN TRADER →</a>
 </div>
-<div class="row" style="margin-top:10px">
-<a href="/explorer/index.html" class="btn btn-g" style="padding:16px">EXPLORER</a>
-<a href="/trader/index.html" class="btn btn-g" style="padding:16px;border-color:#00ff88;color:#00ff88">TRADE NGN</a>
-</div>
+
 <div class="stats">
 <div class="stat"><b>777</b><span>CHAIN ID</span></div>
 <div class="stat"><b>538T</b><span>TOTAL SUPPLY</span></div>
