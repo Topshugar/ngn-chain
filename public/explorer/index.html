@@ -1,139 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Explorer • NGN Chain 777</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain 777 • Explorer</title>
 <style>
-:root{--lime:#c8ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90;--green:#00ff6a;--gold:#FFD700}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif}
-.banner{background:linear-gradient(90deg,#0a3d2e,#008751);border-bottom:1px solid var(--gold);color:#fff;text-align:center;padding:8px 12px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:0.5px}
-.banner b{color:var(--gold)}
-.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(20px);background:rgba(5,5,7,0.9);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.logo{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
-.dot{width:28px;height:28px;background:var(--lime);border-radius:8px;display:grid;place-items:center;color:#000;font-weight:800}
-.btn{border:0;border-radius:999px;padding:9px 14px;font-family:'JetBrains Mono';font-weight:700;font-size:10px;cursor:pointer;text-decoration:none}
-.btn-l{background:var(--lime);color:#000} .btn-w{background:#fff;color:#000}
-.wrap{max-width:560px;margin:0 auto;padding:14px 14px 100px 14px}
-.search{display:flex;gap:8px;margin:16px 0}
-.search input{flex:1;background:#0a0a0d;border:1px solid var(--border);border-radius:12px;padding:14px;color:#fff;font-family:'JetBrains Mono';font-size:12px;outline:none}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px}
-.stat b{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);display:block;margin-bottom:6px}
-.stat span{font-family:'JetBrains Mono';font-size:16px;font-weight:700}
-.stat small{font-size:10px;color:var(--muted);display:block;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px;margin-top:14px}
-.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.head h3{font-family:'JetBrains Mono';font-size:13px;margin:0}
-.live{font-family:'JetBrains Mono';font-size:10px;background:#101410;border:1px solid #1e2a1e;color:var(--green);padding:4px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
-.live i{width:5px;height:5px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green)}
-.row{display:flex;justify-content:space-between;gap:8px;padding:12px 0;border-bottom:1px solid #16161a;font-family:'JetBrains Mono';font-size:11px}
-.hash{color:var(--lime);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.time{color:var(--muted);font-size:10px}
-.tag{background:#16161a;border:1px solid #222;padding:2px 6px;border-radius:6px;font-size:9px}
-.foot{text-align:center;padding:20px;color:var(--muted);font-family:'JetBrains Mono';font-size:10px;line-height:1.6}
-.supply-card{background:linear-gradient(135deg,#0f0f11 0%,#0a3d2e 100%);border:1px solid #1e3d2e;border-radius:20px;padding:16px;margin-top:14px;display:flex;justify-content:space-between;align-items:center}
-a{color:inherit;text-decoration:none}
+:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;padding:16px}
+.header{max-width:1100px;margin:0 auto 16px;display:flex;justify-content:space-between;align-items:center}
+.header h2{font-size:18px;letter-spacing:-0.3px}
+.header a{color:#888;text-decoration:none;font-size:13px;border:1px solid var(--border);padding:8px 12px;border-radius:10px}
+.grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #151515;font-size:13px;color:#aaa}
+.stat b{color:#fff}
+.input{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;font-size:13px}
+.btn{margin-top:10px;width:100%;padding:11px;background:#fff;color:#000;border:0;border-radius:10px;font-weight:650;font-size:13px;cursor:pointer}
+.list{margin-top:12px;max-height:420px;overflow:auto}
+.item{padding:10px 0;border-bottom:1px solid #151515;font-family:monospace;font-size:12px;color:#aaa}
+.item b{color:#fff}
+.note{font-size:12px;color:var(--muted);margin-top:10px;word-break:break-all}
 </style>
 </head>
 <body>
-<div class="banner">⚠️ <b>TESTNET</b> — NGN CHAIN 777 • 100 NGN faucet = <b>free gas only, $0 USD</b> • Total Supply: <b>538T NGN</b> • Mainnet price TBA</div>
-
-<div class="top">
-<a href="/" class="logo"><img src="/logo.svg" style="width:28px;height:28px;border-radius:8px"> NGN • 777 EXPLORER</a>
-<div style="display:flex;gap:8px">
-<a href="/" class="btn btn-w" style="background:#15151a;color:#fff;border:1px solid #222">HOME</a>
-<a href="/studio/index.html" class="btn btn-l">STUDIO</a>
-</div>
+<div class="header">
+<h2>NGN Chain 777 • Explorer</h2>
+<a href="/">Home</a>
 </div>
 
-<div class="wrap">
-<div class="search">
-<input id="search" placeholder="Search address / tx / block">
-<button class="btn btn-w" onclick="doSearch()">SEARCH</button>
-</div>
+<div class="grid">
+<div class="card">
+<div class="label">Chain Overview</div>
+<div class="stat"><span>Chain ID</span><b>777</b></div>
+<div class="stat"><span>Native Token</span><b>NGN</b></div>
+<div class="stat"><span>Block Height</span><b id="block">—</b></div>
+<div class="stat"><span>RPC Status</span><b id="status">—</b></div>
+<div class="stat"><span>Validators</span><b id="vals">—</b></div>
 
-<div class="stats">
-<div class="stat"><b>LATEST BLOCK</b><span id="latestBlock">—</span><small id="blockTime">syncing...</small></div>
-<div class="stat"><b>GAS PRICE</b><span>1 Gwei</span><small>Fixed • Testnet</small></div>
-<div class="stat"><b>CHAIN ID</b><span>777</span><small>0x309 • NGN • Testnet</small></div>
-<div class="stat"><b>BLOCK TIME</b><span>~3s</span><small id="tps">Live</small></div>
-<div class="stat"><b>TOTAL SUPPLY</b><span>538T</span><small id="supplyDetail">538,000,000,000,000 NGN</small></div>
-<div class="stat"><b>FAUCET</b><span>100 NGN</span><small>Test Gas • $0 • 1 claim/24h</small></div>
+<div style="margin-top:16px">
+<div class="label">Lookup</div>
+<input id="hash" class="input" placeholder="Tx hash or address (0x...)" />
+<button class="btn" onclick="lookup()">Search</button>
+<div id="result" class="note"></div>
 </div>
-
-<div class="supply-card">
-<div><b style="font-family:'JetBrains Mono';font-size:11px;color:var(--muted)">FAUCET BANK BALANCE</b><br><span id="bankBal" style="font-family:'JetBrains Mono';font-weight:700;font-size:14px;color:var(--gold)">Checking...</span><br><small style="color:var(--muted);font-size:10px">Never dry — 538T genesis</small></div>
-<div><a href="/" class="btn btn-l">GET 100 NGN</a></div>
 </div>
 
 <div class="card">
-<div class="head"><h3>Latest Blocks</h3><span class="live"><i></i> LIVE</span></div>
-<div id="blocks">Loading...</div>
+<div class="label">Recent Transactions</div>
+<div id="txs" class="list">
+<div class="item">Loading...</div>
 </div>
-
-<div class="card">
-<div class="head"><h3>Latest Transactions</h3><span class="live"><i></i> LIVE</span></div>
-<div id="txs">Loading...</div>
 </div>
-
-<div class="foot">NGN CHAIN 777 EXPLORER • TESTNET • LAGOS<br>100 NGN = free gas for builders • No USD value • Not real Naira • Mainnet price TBA<br><span style="color:#555">Total Supply: 538 Trillion NGN • Genesis Account: 538T</span></div>
 </div>
 
 <script>
-const RPC='https://ngn-chain.onrender.com';
-let provider=new ethers.providers.JsonRpcProvider(RPC);
-const $=id=>document.getElementById(id);
 async function load(){
  try{
-  const blockNum=await provider.getBlockNumber();
-  $('latestBlock').innerText='#'+blockNum;
-  // fetch bank balance from your api/stats
-  try {
-    const statsRes = await fetch(RPC+'/api/stats').then(r=>r.json());
-    if(statsRes.faucetBankBalanceNGN){
-      const bal = Number(statsRes.faucetBankBalanceNGN).toLocaleString();
-      $('bankBal').innerText = bal + ' NGN';
-      $('supplyDetail').innerText = 'Bank: ' + bal + ' NGN';
-    }
-  } catch {}
-  let blocksHtml=''; let txsHtml='';
-  for(let i=0;i<6;i++){
-    try{
-      const b=await provider.getBlock(blockNum-i);
-      if(!b) continue;
-      const ago=Math.floor(Date.now()/1000 - b.timestamp);
-      blocksHtml+=`<div class="row"><div><span class="tag">BK</span> <span class="hash">#${b.number}</span><div class="time">${ago}s ago • ${b.transactions.length} txs</div></div><div style="text-align:right"><div>${b.miner?b.miner.slice(0,6)+'...'+b.miner.slice(-4):'Genesis'}</div></div></div>`;
-      if(b.transactions.length>0 && i<2){
-        for(let j=0;j<Math.min(b.transactions.length,3);j++){
-          try{
-            const tx=await provider.getTransaction(b.transactions[j]);
-            if(tx) txsHtml+=`<div class="row"><div><span class="tag">TX</span> <span class="hash">${tx.hash.slice(0,12)}...</span><div class="time">Block #${tx.blockNumber}</div></div><div style="text-align:right"><div>${tx.from?tx.from.slice(0,6)+'...':''} → ${tx.to?tx.to.slice(0,6)+'...':'Contract'}</div></div></div>`;
-          }catch{}
-        }
-      }
-    }catch{}
-  }
-  $('blocks').innerHTML=blocksHtml||'No blocks';
-  $('txs').innerHTML=txsHtml||'No txs yet';
-  $('blockTime').innerText='Just now';
- }catch(e){ $('blocks').innerText='Error: '+e.message; }
+  const r=await fetch('/api/stats'); const j=await r.json();
+  document.getElementById('block').innerText=j.blockNumber;
+  document.getElementById('status').innerText='Operational';
+  document.getElementById('vals').innerText=j.validators ?? '—';
+ }catch{
+  document.getElementById('status').innerText='Offline';
+ }
 }
-async function doSearch(){
-  const q=$('search').value.trim(); if(!q) return;
-  if(q.startsWith('0x') && q.length==42){
-    const bal=await provider.getBalance(q); const code=await provider.getCode(q); const c=await provider.getTransactionCount(q);
-    alert(`ADDRESS ${q}\nBal: ${ethers.utils.formatEther(bal)} NGN (Testnet, $0)\nTxs: ${c}\nContract: ${code!='0x'}`);
-  }else if(q.startsWith('0x')){
-    const tx=await provider.getTransaction(q); const rec=await provider.getTransactionReceipt(q);
-    alert(`TX ${q}\nFrom ${tx.from}\nTo ${tx.to}\nBlock ${tx.blockNumber}\nStatus ${rec?rec.status:0}`);
-  }else{
-    const b=await provider.getBlock(parseInt(q)); alert(`BLOCK #${b.number}\nHash ${b.hash}\nTxs ${b.transactions.length}`);
-  }
+async function lookup(){
+ const v=document.getElementById('hash').value.trim();
+ const out=document.getElementById('result');
+ if(!v){ out.innerText='Enter hash or address'; return; }
+ out.innerText='Querying...';
+ if(v.length===66){
+   try{
+     const body={jsonrpc:'2.0',id:1,method:'eth_getTransactionByHash',params:[v]};
+     const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+     const data=await res.json();
+     out.innerText = data.result ? JSON.stringify(data.result,null,2) : 'Transaction not found';
+   }catch(e){ out.innerText='Error: '+e.message; }
+ }else{
+   try{
+     const body={jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[v,'latest']};
+     const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+     const data=await res.json();
+     out.innerText = data.result ? `Balance: ${data.result}` : 'Address not found or 0';
+   }catch(e){ out.innerText='Error: '+e.message; }
+ }
 }
-load(); setInterval(load,5000);
+// Mock recent list from /api/stats or just show block ticker
+setInterval(load, 5000);
+load();
 </script>
 </body>
 </html>
