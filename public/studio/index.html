@@ -1,189 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>NGN Studio • Chain 777</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain 777 • Studio</title>
 <style>
-:root{--lime:#c8ff00;--lime2:#b7ff00;--bg:#050507;--card:#0f0f11;--border:#1e1e22;--muted:#8a8a90}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;letter-spacing:-0.01em}
-.top{position:sticky;top:0;z-index:10;backdrop-filter:blur(20px);background:rgba(5,5,7,0.8);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.logo{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
-.dot{width:28px;height:28px;background:var(--lime);border-radius:8px;display:grid;place-items:center;color:#000;font-weight:700}
-.badge{font-size:10px;background:#151515;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted)}
-.btn-c{background:#fff;color:#000;border:0;padding:10px 16px;border-radius:999px;font-family:'JetBrains Mono';font-weight:700;font-size:11px;letter-spacing:0.02em}
-.wrap{max-width:520px;margin:0 auto;padding:16px 14px 100px 14px}
-.hero{padding:22px 4px 8px 4px}
-.hero h1{font-family:'JetBrains Mono';font-size:32px;line-height:0.95;letter-spacing:-0.04em;margin:0}
-.hero h1 span{color:var(--lime)}
-.hero p{color:var(--muted);font-size:13px;line-height:1.6;margin:10px 0 0 0;max-width:360px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;margin-top:14px;position:relative;overflow:hidden}
-.card:before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
-.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.step{font-family:'JetBrains Mono';font-size:10px;background:var(--lime);color:#000;padding:5px 10px;border-radius:999px;font-weight:700}
-.h2{font-family:'JetBrains Mono';font-size:15px;font-weight:700;margin:0}
-.sub{color:var(--muted);font-size:12px;margin:6px 0 14px 0;line-height:1.5}
-.btn{width:100%;border:0;border-radius:12px;padding:16px;font-family:'JetBrains Mono';font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
-.btn:active{transform:scale(0.98)}
-.btn-lime{background:var(--lime);color:#000}
-.btn-white{background:#fff;color:#000}
-.btn-ghost{background:#16161a;color:#fff;border:1px solid #24242a}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.kv{background:#0a0a0d;border:1px solid #1c1c20;border-radius:12px;padding:12px;margin-top:10px}
-.kv b{display:block;font-family:'JetBrains Mono';font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px}
-.kv span{font-family:'JetBrains Mono';font-size:11px;word-break:break-all;line-height:1.5}
-.log{background:#08080a;border:1px dashed #232329;border-radius:12px;padding:12px;font-family:'JetBrains Mono';font-size:10px;color:#9a9aa0;min-height:48px;white-space:pre-wrap;word-break:break-all;margin-top:12px}
-textarea{width:100%;background:#08080a;border:1px solid var(--border);border-radius:14px;padding:14px;color:#fff;font-family:'JetBrains Mono';font-size:11px;min-height:220px;outline:none}
-textarea:focus{border-color:#2a2a30}
-.div{height:1px;background:var(--border);margin:14px 0}
-.foot{text-align:center;padding:20px;color:var(--muted);font-family:'JetBrains Mono';font-size:10px}
-.live{display:inline-flex;align-items:center;gap:6px}
-.live i{width:6px;height:6px;background:#00ff6a;border-radius:50%;box-shadow:0 0 8px #00ff6a;display:inline-block}
+:root{--bg:#080808;--card:#111;--border:#1e1e1e;--muted:#888;--code:#0e0e0e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:#fff;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
+.header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--card)}
+.header h2{font-size:15px;font-weight:650;letter-spacing:-0.2px}
+.header a{color:#888;text-decoration:none;font-size:12px;border:1px solid var(--border);padding:6px 10px;border-radius:8px}
+.main{flex:1;display:grid;grid-template-columns:1fr 380px;overflow:hidden}
+@media(max-width:900px){.main{grid-template-columns:1fr;}}
+.editor{display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);background:#0f0f0f}
+.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#000;font-weight:600;font-size:12px;cursor:pointer}
+.btn.sec{background:#0f0f0f;color:#ccc}
+textarea{flex:1;width:100%;background:var(--code);color:#d6d6d6;border:0;padding:16px;font-family:JetBrains Mono,Menlo,monospace;font-size:13px;line-height:1.6;resize:none;outline:none}
+.panel{background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.log{flex:1;overflow:auto;padding:12px;font-family:monospace;font-size:12px;color:#aaa;white-space:pre-wrap}
+.input{margin:10px 12px;padding:10px;background:#0a0a0a;border:1px solid var(--border);border-radius:8px;color:#fff;font-size:12px}
+.row{display:flex;gap:8px;padding:0 12px 12px}
 </style>
 </head>
 <body>
-<div class="top">
-<div class="logo"><div class="dot">N</div> NGN • 777 <span class="badge">MAINNET</span></div>
-<button class="btn-c" id="cBtn" onclick="connectWallet()">CONNECT</button>
+<div class="header">
+<h2>NGN Chain 777 • Studio</h2>
+<a href="/">Home</a>
 </div>
 
-<div class="wrap">
-<div class="hero">
-<h1>BUILD ON<br><span>NGN CHAIN</span><br>777</h1>
-<p>Mobile-first studio for everyone. Generate NGN wallet, claim gas, deploy contracts — all from your phone.</p>
+<div class="main">
+<div class="editor">
+<div class="toolbar">
+<button class="btn" onclick="compile()">Compile</button>
+<button class="btn sec" onclick="deploy()">Deploy (Demo)</button>
+</div>
+<textarea id="code" spellcheck="false">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+contract Counter {
+    uint256 public count;
+
+    function increment() public {
+        count += 1;
+    }
+
+    function set(uint256 _count) public {
+        count = _count;
+    }
+}
+</textarea>
 </div>
 
-<div class="card">
-<div class="head"><div class="h2">Wallet Connection</div><span class="step">01</span></div>
-<p class="sub">Auto-detects Trust Wallet, MetaMask, Bitget, OKX. Opens natively inside wallet browsers.</p>
-<button class="btn btn-white" onclick="connectWallet()">CONNECT & ADD NGN 777</button>
-<div class="kv"><b>CONNECTED ADDRESS</b><span id="connAddr">—</span></div>
-<div class="kv"><b>NETWORK STATUS</b><span id="connStatus">Not connected • Chain 777 • RPC: ngn-chain.onrender.com</span></div>
-<div class="log" id="connLog"><span class="live"><i></i> Awaiting connection</span></div>
+<div class="panel">
+<h4>Output</h4>
+<div id="output" class="log">Ready • Chain ID 777
+RPC: https://ngn-chain.onrender.com
 </div>
-
-<div class="card">
-<div class="head"><div class="h2">NGN Special Wallet</div><span class="step">02 • m/44'/777'</span></div>
-<p class="sub">Native derivation path. Not Ethereum. Designed for mobile generation without extension.</p>
-<button class="btn btn-lime" onclick="generateNGNWallet()">GENERATE NGN WALLET</button>
-<div class="row"><button class="btn btn-ghost" onclick="generateBulk()">GENERATE 5</button><button class="btn btn-ghost" onclick="importToDevice()">IMPORT → APP</button></div>
-<div class="kv"><b>MNEMONIC • 12 WORDS • SAVE SECURELY</b><span id="w-mnemonic">Click generate to create</span></div>
-<div class="kv"><b>ADDRESS • NGN CHAIN 777</b><span id="w-address">—</span></div>
-<div class="kv"><b>PRIVATE KEY • DO NOT SHARE</b><span id="w-pkey">—</span></div>
-<div id="w-bulk"></div>
+<h4 style="border-top:1px solid var(--border)">Constructor Args (optional)</h4>
+<input id="args" class="input" placeholder="e.g. 100" />
+<div class="row">
+<button class="btn sec" style="flex:1" onclick="clearLog()">Clear</button>
 </div>
-
-<div class="card">
-<div class="head"><div class="h2">Faucet</div><span class="step">FREE</span></div>
-<p class="sub">100 NGN gas for deployment. 1 claim per address / 24h. Funded from genesis.</p>
-<button class="btn btn-lime" onclick="claimFaucet()">CLAIM 100 NGN</button>
-<div class="log" id="faucetLog">Ready to claim. Select wallet above.</div>
 </div>
-
-<div class="card">
-<div class="head"><div class="h2">Deploy</div><span class="step">04</span></div>
-<p class="sub">Solidity ^0.8.20 compatible. Compiles server-side, deploys via connected wallet.</p>
-<textarea id="source">// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-contract NGN {
-  string public name = "NGN";
-  string public symbol = "NGN";
-  uint256 public totalSupply = 1_000_000 ether;
-  mapping(address=>uint) public balanceOf;
-  constructor(){ balanceOf[msg.sender]=totalSupply; }
-  function transfer(address to,uint amt) external returns(bool){
-    require(balanceOf[msg.sender]>=amt);
-    balanceOf[msg.sender]-=amt;
-    balanceOf[to]+=amt;
-    return true;
-  }
-}</textarea>
-<div class="row"><button class="btn btn-white" onclick="compile()">COMPILE</button><button class="btn btn-lime" onclick="deploy()">DEPLOY</button></div>
-<div class="log" id="deployLog">Compiler ready • solc 0.8.20</div>
-</div>
-
-<div class="foot">NGN CHAIN 777 • ChainId 0x309 • Built for mobile • Lagos, NG</div>
 </div>
 
 <script>
-let currentWallet=null,provider=null,signer=null,connectedAddress=null;
-const NGN_PATH="m/44'/777'/0'/0/0";
-const NGN_CHAIN={chainId:'0x309',chainName:'NGN Chain 777',nativeCurrency:{name:'NGN',symbol:'NGN',decimals:18},rpcUrls:['https://ngn-chain.onrender.com'],blockExplorerUrls:['https://ngn-chain.onrender.com']};
-const $=id=>document.getElementById(id);
-function setLog(id,msg){$(id).innerText=msg}
-async function connectWallet(){
-  try{
-    if(!window.ethereum){ alert('Open inside Trust Wallet / MetaMask browser'); return; }
-    provider=new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts",[]);
-    signer=provider.getSigner();
-    connectedAddress=await signer.getAddress();
-    $('connAddr').innerText=connectedAddress;
-    $('cBtn').innerText=connectedAddress.slice(0,6)+'...'+connectedAddress.slice(-4);
-    try{
-      await window.ethereum.request({method:'wallet_addEthereumChain',params:[NGN_CHAIN]});
-      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x309'}]});
-      $('connStatus').innerText='NGN 777 Active • Connected ✓';
-    }catch(e){}
-    setLog('connLog','Connected: '+connectedAddress+'\nChain: NGN 777 (0x309) ✓');
-  }catch(e){ alert('Connect failed: '+e.message); }
-}
-function generateNGNWallet(){
-  try{
-    const mnemonic=ethers.utils.entropyToMnemonic(ethers.utils.randomBytes(16));
-    const wallet=ethers.Wallet.fromMnemonic(mnemonic,NGN_PATH);
-    currentWallet=wallet;
-    $('w-mnemonic').innerText=mnemonic;
-    $('w-address').innerText=wallet.address;
-    $('w-pkey').innerText=wallet.privateKey;
-    setLog('deployLog','Generated NGN Wallet: '+wallet.address);
-  }catch(e){ alert(e.message); }
-}
-function generateBulk(){
-  let h='';for(let i=0;i<5;i++){const m=ethers.utils.entropyToMnemonic(ethers.utils.randomBytes(16));const w=ethers.Wallet.fromMnemonic(m,`m/44'/777'/0'/${i}/0`);h+=`<div class="kv"><b>WALLET ${i+1} • m/44'/777'/0'/${i}</b><span>${w.address}<br><small style="color:#666">${m}</small></span></div>`} $('w-bulk').innerHTML=h;
-}
-async function importToDevice(){
-  if(!currentWallet) return alert('Generate first');
-  try{await navigator.clipboard.writeText(currentWallet.privateKey);alert('Private Key Copied!\n\nTrust Wallet: Settings → Wallets → + → Import Private Key\n\n'+currentWallet.address)}catch{prompt('Copy private key:',currentWallet.privateKey)}
-}
-async function claimFaucet(){
-  try{
-    let addr=currentWallet?currentWallet.address:connectedAddress;
-    if(!addr) addr=prompt('Paste NGN address:'); if(!addr) return;
-    setLog('faucetLog','Claiming 100 NGN → '+addr+'...');
-    const res=await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr})});
-    const out=await res.json(); if(out.error) throw new Error(out.error);
-    setLog('faucetLog',`SUCCESS ✓\n100 NGN sent\nTo: ${out.to}\nTx: ${out.txHash}`);
-  }catch(e){ setLog('faucetLog','Error: '+e.message); }
-}
+const $ = id => document.getElementById(id);
+function log(msg){ $('output').innerText += '\n' + msg; $('output').scrollTop = $('output').scrollHeight; }
+function clearLog(){ $('output').innerText='Ready • Chain ID 777'; }
+
 async function compile(){
-  setLog('deployLog','Compiling...');
+  const source = $('code').value;
+  log('> Compiling...');
   try{
-    const source=$('source').value;
-    const res=await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source})});
-    const out=await res.json(); if(out.errors) console.log(out.errors);
-    window.compiled=out;
-    const name=Object.keys(out.contracts['NGN.sol']||{})[0]||'Contract';
-    setLog('deployLog','Compiled ✓\nContract: '+name);
-  }catch(e){ setLog('deployLog','Compile error: '+e.message); }
+    const res = await fetch('/compile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source})});
+    const data = await res.json();
+    if(data.error){ log('Error: '+data.error); return; }
+    log(`Compiled: ${data.contractName}`);
+    log(`Bytecode: ${data.bytecode.slice(0,66)}...`);
+    window.lastBuild = data;
+  }catch(e){ log('Compile failed: '+e.message); }
 }
+
 async function deploy(){
-  try{
-    if(!window.compiled) return setLog('deployLog','Compile first');
-    if(!signer) return setLog('deployLog','Connect wallet first');
-    const cName=Object.keys(window.compiled.contracts['NGN.sol'])[0];
-    const abi=window.compiled.contracts['NGN.sol'][cName].abi;
-    const bytecode=window.compiled.contracts['NGN.sol'][cName].evm.bytecode.object;
-    setLog('deployLog','Deploying to NGN 777...');
-    const factory=new ethers.ContractFactory(abi,bytecode,signer);
-    const contract=await factory.deploy(); await contract.deployed();
-    setLog('deployLog',`DEPLOYED ✓\nAddress: ${contract.address}\nTx: ${contract.deployTransaction.hash}\nChain: 777`);
-  }catch(e){ setLog('deployLog','Deploy error: '+e.message); }
+  if(!window.lastBuild){ log('Compile first'); return; }
+  log('> Deploying to 777 (simulated)...');
+  log(`ABI entries: ${window.lastBuild.abi.length}`);
+  log('Deployed: 0x'+[...Array(40)].map(()=>Math.floor(Math.random()*16).toString(16)).join(''));
 }
-window.addEventListener('load',()=>{ if(window.ethereum) setTimeout(connectWallet,600); });
 </script>
 </body>
 </html>
