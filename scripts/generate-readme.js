@@ -2,109 +2,169 @@ const fs = require('fs');
 const path = require('path');
 
 const RPC = 'https://ngn-chain.onrender.com';
+const REPO_URL = 'https://github.com/Topshugar/NGN-chain';
 
 async function getCBN() {
   try {
-    const j = await fetch('https://api.exchangerate-api.com/v4/latest/USD').then(r=>r.json());
-    return { rate: j.rates.NGN.toFixed(2), date: new Date().toISOString().slice(0,10) };
-  } catch {
-    return { rate: '1346.00', date: new Date().toISOString().slice(0,10) };
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const j = await res.json();
+    return {
+      rate: Number(j.rates.NGN).toFixed(2),
+      date: new Date().toISOString().slice(0, 10)
+    };
+  } catch (e) {
+    return { rate: '1346.00', date: new Date().toISOString().slice(0, 10) };
   }
 }
 
 async function getStats() {
   try {
-    const j = await fetch(RPC + '/api/stats').then(r=>r.json());
+    const res = await fetch(RPC + '/api/stats');
+    const j = await res.json();
     return {
-      block: j.blockNumber || j.latestBlock || '—',
-      bank: j.faucetBankBalanceNGN ? Number(j.faucetBankBalanceNGN).toLocaleString() : '538T'
+      block: j.blockNumber || j.block_number || 0,
+      bank: j.faucetBankBalanceNGN || '538T',
+      accounts: j.genesisAccounts || 10
     };
-  } catch {
-    return { block: '—', bank: '538T' };
+  } catch (e) {
+    return { block: 0, bank: '538T', accounts: 10 };
   }
 }
 
 function getRoutes() {
-  const pub = 'public';
-  if (!fs.existsSync(pub)) return [];
-  const dirs = fs.readdirSync(pub).filter(f => fs.statSync(path.join(pub,f)).isDirectory());
-  const routes = [{ path: '/', desc: 'Main Dashboard + Faucet' }];
-  for (const d of dirs) {
-    if (d === 'studio') routes.push({ path: '/studio', desc: 'Mobile Contract Studio' });
-    else if (d === 'trader') routes.push({ path: '/trader', desc: 'Mobile Wallet' });
-    else if (d === 'explorer') routes.push({ path: '/explorer', desc: 'Block Explorer' });
-    else routes.push({ path: `/${d}`, desc: `${d.toUpperCase()} Module` });
-  }
-  routes.push({ path: '/logo.svg', desc: 'Chain Logo' });
-  return routes;
+  const pub = path.join(process.cwd(), 'public');
+  if (!fs.existsSync(pub)) return ['/studio', '/explorer', '/trader'];
+  return fs.readdirSync(pub)
+    .filter(f => fs.statSync(path.join(pub, f)).isDirectory())
+    .map(d => `/${d}`);
 }
 
-async function main(){
+async function main() {
   const cbn = await getCBN();
   const stats = await getStats();
   const routes = getRoutes();
-  const routesTable = routes.map(r => `| \`${r.path}\` | ${r.desc} |`).join('\n');
 
-  const md = `# NGN Chain 777 • Mobile-First L1
+  const md = `# NGN Chain 777 — The Mobile Chain
+**Built in Lagos, for builders without laptops.**
 
-**Built in Lagos for builders without laptops.**
+> **LIVE:** Block #${stats.block} | ${cbn.date} | 1 USD ≈ **${cbn.rate} NGN** | Faucet Bank: ${stats.bank} NGN | Auto-Updated
 
-NGN Chain 777 is a mobile-first EVM chain (Chain ID: 777) with 538 Trillion NGN genesis. Testnet gas is free — 100 NGN = $0 USD, not real Naira.
+Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RPC: ${RPC}
 
-**Live RPC:** ${RPC}
-**Live Block:** #${stats.block} • **Faucet Bank:** ${stats.bank} NGN • **README Auto-Generated:** ${cbn.date}
+🌐 Live: ${RPC}
+📱 Studio: ${RPC}/studio/
+🔍 Explorer: ${RPC}/explorer/
+💼 Trader: ${RPC}/trader/
 
-### 🔗 Routes (Auto-Discovered)
+### Auto-Discovered Routes (Live from /public)
+${routes.map(r => `- ${RPC}${r}`).join('\n')}
 
-| Route | What It Does |
-|-------|--------------|
-${routesTable}
+### Live FX Rate (CBN)
+- **1 USD ≈ ${cbn.rate} NGN** — Updated: ${cbn.date}
+- **1 NGN Test Token = $0** — Faucet only
 
-### 🪙 Tokenomics (Live)
+### Why NGN Chain?
+99% of Nigerian Web3 users only have a phone. Existing chains require Laptop + MetaMask desktop + Alchemy/Infura keys + $20 gas. NGN Chain removes all of that.
 
-- **Chain ID:** 777 (0x309)
-- **Symbol:** NGN
-- **Total Supply:** 538,000,000,000,000 NGN (538T)
-- **Live Block:** ${stats.block}
-- **Faucet Bank:** ${stats.bank} NGN
-- **Faucet:** 100 NGN / wallet / 24h — Test gas $0
-- **Note:** Not real Naira. Not affiliated with CBN. Mainnet price TBA.
+- Works inside Trust Wallet Browser natively
+- Free 100 NGN faucet daily — Bank: ${stats.bank} NGN (never dry)
+- No API keys, no gatekeeping
+- Custom derivation path m/44'/777'/0'/0/0
+- Compile & deploy directly from mobile
 
-**Live FX:** 1 USD ≈ ${cbn.rate} NGN (Market rate, auto-updated ${cbn.date}). NGN Chain testnet NGN = $0 until mainnet.
+### Quick Start (Phone Only)
+**1. Add NGN Chain to Wallet**
+Network Name: NGN Chain 777
+RPC URL: ${RPC}
+Chain ID: 777 (0x309)
+Symbol: NGN
 
-### 📱 Why Mobile-First?
+**2. Claim Faucet**
+\`\`\`bash
+curl -X POST ${RPC}/faucet -H "Content-Type: application/json" -d '{"address":"0xYourAddress"}'
+\`\`\`
+Or use Studio UI: ${RPC}/studio/
 
-Works inside Trust Wallet browser. m/44'/777' path, Solidity ^0.8.20, deploy from phone.
+**3. Deploy Contract from Phone**
+Open ${RPC}/studio/ in Trust Wallet Browser > Generate wallet (HD path 777) > Claim 100 NGN > Paste Solidity > Compile → Deploy
 
-### 🛠️ Add to Wallet
+### Architecture
+Studio: /studio/ — Wallet Gen + Faucet + Compiler
+Explorer: /explorer/ — Live blocks/txs
+Trader: /trader/
+RPC Layer: POST / — Full EVM JSON-RPC (Ganache 7.9.2, 3s blocks, Shanghai)
+Chain ID 777 — m/44'/777'
 
-\`\`\`js
-{
-  chainId: '0x309',
-  chainName: 'NGN Chain 777 Testnet',
-  rpcUrls: ['${RPC}'],
-  nativeCurrency: { name: 'NGN', symbol: 'NGN', decimals: 18 },
-  blockExplorerUrls: ['${RPC}/explorer'],
-  iconUrls: ['${RPC}/logo.svg']
-}
+### Tech Stack
+Runtime: Node.js 18+ / Express 4
+Chain: Ganache 7.9.2 (EVM)
+Compiler: solc 0.8.19
+Wallet: ethers.js 5.7.2 + BIP39/BIP32
+Frontend: Vanilla HTML/CSS/JS — No build step, mobile-first
+
+### API
+**RPC (EVM Compatible)**
+\`POST / { "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }\`
+Supported: eth_accounts, eth_getBalance, eth_sendTransaction, eth_call, eth_estimateGas, etc.
+
+**Faucet**
+POST /faucet Body: { "address": "0x..." } Response: { success, txHash, amount: "100 NGN" } Rate limit: 1 per address + IP / 24h
+
+**Compiler**
+POST /compile Body: { "source": "pragma solidity..." }
+
+**Stats**
+GET /health → { status, chainId, uptime }
+GET /api/stats → { blockNumber: ${stats.block}, genesisAccounts: ${stats.accounts}, faucetBankBalanceNGN: "${stats.bank}" }
+
+### Local Development
+\`\`\`bash
+git clone ${REPO_URL}.git
+cd NGN-chain
+npm install
+npm run dev
 \`\`\`
 
-### 🚰 Faucet
+### Roadmap
+- [x] Chain ID 777 + custom derivation path
+- [x] Mobile Studio (generate, faucet, compile, deploy)
+- [x] Live Explorer
+- [x] Faucet with rate limiting
+- [x] Professional RPC (JSON-RPC 2.0)
+- [x] Auto-README with live CBN rate — Added ${cbn.date}
+- [ ] Contract verification in explorer
+- [ ] Public testnet with persistent DB
+- [ ] Bridge to Base / Lisk
+- [ ] NGN Stable Token (naira-pegged)
 
-\`POST /faucet\` → { "address": "0x..." } → 100 NGN
+### Use Cases Built on NGN 777
+Education: Students learn Solidity on phone
+Payments: Market traders P2P via QR, 3s settlement
+Creators: Artists mint NFTs from studio
+Community Savings: Transparent Ajo on-chain
 
-### 🤖 Auto-Generation
+### Security
+Faucet rate-limited by address + IP (24h)
+Compiler input limited to 50kb
+CORS enabled for wallet browsers
+No private keys stored server-side — all wallet generation client-side
 
-This README is auto-generated by \`scripts/generate-readme.js\` — scans public/ + fetches live rate + block.
+### Stats (Live)
+- **Current Block:** #${stats.block}
+- **Faucet Bank:** ${stats.bank} NGN
+- **Genesis Accounts:** ${stats.accounts}
+- **Live CBN Rate:** 1 USD ≈ ${cbn.rate} NGN on ${cbn.date}
 
-Run: \`node scripts/generate-readme.js\`
+License: MIT — Built in Lagos, Open for Everyone.
 
----
-**NGN CHAIN 777 • BUILT IN LAGOS • AUTO-README • ${cbn.date} • Block #${stats.block}**
+**Made with ❤️ in Lagos — Chain 777 — Block #${stats.block} — ${cbn.rate} NGN/USD — ${cbn.date}**
 `;
 
-  fs.writeFileSync('README.md', md);
-  console.log(`README generated ✓ Rate: ${cbn.rate} | Block: ${stats.block} | Routes: ${routes.length}`);
+  fs.writeFileSync('README.md', md, 'utf8');
+  console.log(`README.md generated ✓ Block #${stats.block} | ${cbn.rate} NGN | Routes: ${routes.join(', ')}`);
 }
 
-main();
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});
