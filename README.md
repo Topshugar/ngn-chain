@@ -1,7 +1,7 @@
 # NGN Chain 777 — The Mobile Chain
 **Built in Lagos, for builders without laptops.**
 
-> **LIVE:** Block #0 | 2026-11-03 | 1 USD ≈ **1345.87 NGN** | Faucet Bank: 538T NGN | Auto-Updated
+> **LIVE:** Block #0 | 2026-11-03 | 1 USD ≈ **1345.87 NGN** | Faucet Bank: 538000000000000 NGN | Auto-Updated
 
 Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RPC: https://ngn-chain.onrender.com
 
@@ -24,7 +24,7 @@ Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RP
 99% of Nigerian Web3 users only have a phone. Existing chains require Laptop + MetaMask desktop + Alchemy/Infura keys + $20 gas. NGN Chain removes all of that.
 
 - Works inside Trust Wallet Browser natively
-- Free 100 NGN faucet daily — Bank: 538T NGN (never dry)
+- Free 100 NGN faucet daily — Bank: 538000000000000 NGN (never dry)
 - No API keys, no gatekeeping
 - Custom derivation path m/44'/777'/0'/0/0
 - Compile & deploy directly from mobile
@@ -72,7 +72,7 @@ POST /compile Body: { "source": "pragma solidity..." }
 
 **Stats**
 GET /health → { status, chainId, uptime }
-GET /api/stats → { blockNumber: 0, genesisAccounts: 10, faucetBankBalanceNGN: "538T" }
+GET /api/stats → { blockNumber: 0, genesisAccounts: 10, faucetBankBalanceNGN: "538000000000000" }
 
 ### Local Development
 ```bash
@@ -108,7 +108,7 @@ No private keys stored server-side — all wallet generation client-side
 
 ### Stats (Live)
 - **Current Block:** #0
-- **Faucet Bank:** 538T NGN
+- **Faucet Bank:** 538000000000000 NGN
 - **Genesis Accounts:** 10
 - **Live CBN Rate:** 1 USD ≈ 1345.87 NGN on 2026-11-03
 
