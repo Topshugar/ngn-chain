@@ -4,14 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NGN Chain 777</title>
-<link rel="icon" href="/logo.svg" />
 <style>
-:root{--bg:#0a0a0a;--card:#111;--border:#1f1f1f;--muted:#888;--text:#fff}
+:root{--bg:#0a0a0a;--card:#111;--border:#1f1f1f;--muted:#888;--text:#fff;--green:#00c076}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .wrap{width:100%;max-width:460px}
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.brand img{width:40px;height:40px;border-radius:10px;background:#151515}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--green),#009624);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white;flex-shrink:0}
 .brand h1{font-size:22px;letter-spacing:-0.5px;font-weight:700}
 .brand span{font-size:12px;color:var(--muted);display:block;margin-top:2px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px}
@@ -34,10 +33,10 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
 <body>
 <div class="wrap">
   <div class="brand">
-    <img src="/logo.svg" alt="" />
+    <div class="logo-icon">₦</div>
     <div>
       <h1>NGN Chain 777</h1>
-      <span>EVM • Chain ID 777</span>
+      <span>EVM • Chain ID 777 • L1</span>
     </div>
   </div>
 
@@ -64,50 +63,26 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
 
 <script>
 const $ = (id) => document.getElementById(id);
-
 async function loadStats(){
   try{
     const res = await fetch('/api/stats');
     const data = await res.json();
     $('net').innerText = 'Operational';
     $('block').innerText = data.blockNumber ?? '—';
-  }catch{
-    $('net').innerText = 'Offline';
-  }
+  }catch{ $('net').innerText = 'Offline'; }
 }
-
 async function claim(){
   const address = $('addr').value.trim();
-  const btn = $('claimBtn');
-  const msg = $('msg');
-  if(!/^0x[a-fA-F0-9]{40}$/.test(address)){
-    msg.innerText = 'Enter a valid 0x address';
-    return;
-  }
-  btn.disabled = true;
-  btn.innerText = 'Processing...';
-  msg.innerText = '';
+  const btn = $('claimBtn'); const msg = $('msg');
+  if(!/^0x[a-fA-F0-9]{40}$/.test(address)){ msg.innerText = 'Enter a valid 0x address'; return; }
+  btn.disabled = true; btn.innerText = 'Processing...'; msg.innerText = '';
   try{
-    const res = await fetch('/faucet',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({address})
-    });
+    const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
     const data = await res.json();
-    if(data.success){
-      msg.innerText = `Success • ${data.txHash}`;
-      loadStats();
-    }else{
-      msg.innerText = data.error || 'Request failed';
-    }
-  }catch(e){
-    msg.innerText = 'Network error';
-  }finally{
-    btn.disabled = false;
-    btn.innerText = 'Claim 100 NGN';
-  }
+    if(data.success){ msg.innerText = `Success • ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Request failed'; }
+  }catch{ msg.innerText = 'Network error'; }
+  finally{ btn.disabled = false; btn.innerText = 'Claim 100 NGN'; }
 }
-
 loadStats();
 </script>
 </body>
