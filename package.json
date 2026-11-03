@@ -1,14 +1,10 @@
 {
   "name": "ngn-chain",
   "version": "2.0.0",
-  "description": "NGN Chain 777 - Professional EVM without Ganache",
+  "description": "NGN Chain 777 - EVM Layer 1",
   "main": "server.js",
-  "engines": {
-    "node": "20.17.0"
-  },
-  "scripts": {
-    "start": "node server.js"
-  },
+  "engines": { "node": "20.17.0" },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "cors": "^2.8.5",
     "ethers": "^6.12.0",
