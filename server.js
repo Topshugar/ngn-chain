@@ -1,19 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
-const solc = require('solc');
 const { ethers } = require('ethers');
+const solc = require('solc');
 
 const app = express();
 const CHAIN_ID = 777;
 const PORT = process.env.PORT || 10000;
 const FAUCET_AMOUNT = ethers.parseEther("100");
+// 987 Trillion - real supply, hidden from frontend
+const FAUCET_BANK_SUPPLY = ethers.parseEther("987000000000000");
 
-console.log('🚀 NGN Chain 777 - Professional Mode (No Ganache)');
+console.log('🚀 NGN Chain 777 - Professional Mode | 987T Faucet Hidden');
 
-// Deterministic wallets - same 10 accounts forever
-const MNEMONIC = "ngn chain lagos stable professional seed phrase seven seven seven";
+// VALID BIP39 mnemonic
+const MNEMONIC = "test test test test test test test test test test test junk";
 const wallets = [];
 for(let i=0;i<10;i++){
   const wallet = ethers.HDNodeWallet.fromMnemonic(ethers.Mnemonic.fromPhrase(MNEMONIC), `m/44'/60'/0'/0/${i}`);
@@ -21,11 +22,17 @@ for(let i=0;i<10;i++){
 }
 const accounts = wallets.map(w=>w.address);
 let balances = {};
-accounts.forEach(a=> balances[a.toLowerCase()] = ethers.parseEther("100000"));
+accounts.forEach((a, i) => {
+  if(i === 0){
+    balances[a.toLowerCase()] = FAUCET_BANK_SUPPLY; // 987T hidden bank
+  } else {
+    balances[a.toLowerCase()] = ethers.parseEther("100000");
+  }
+});
 let blockNumber = 355;
 let transactions = {};
 
-console.log(`📁 Accounts: ${accounts[0]}...`);
+console.log(`📁 Genesis: ${accounts[0]} | Bank: 987T NGN (hidden)`);
 
 function getLogoSVG(size=256){
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256"><circle cx="128" cy="128" r="120" fill="#008751" stroke="#FFD700" stroke-width="6"/><text x="128" y="145" font-family="Arial Black" font-weight="900" font-size="88" fill="white" text-anchor="middle">NGN</text></svg>`;
@@ -36,8 +43,16 @@ app.use(express.json({limit:'5mb'}));
 
 app.get('/logo.svg',(req,res)=>{res.setHeader('Content-Type','image/svg+xml');res.send(getLogoSVG(512));});
 app.get('/health',(req,res)=>res.json({status:'live',chain:'NGN Chain 777',chainId:CHAIN_ID, blockNumber}));
-app.get('/api/stats', async (req,res)=>{
-  res.json({chainId:CHAIN_ID, blockNumber, genesisAccounts: accounts.length, faucetBankBalanceNGN: Number(ethers.formatEther(balances[accounts[0].toLowerCase()]||0n)) });
+// HIDES 987T from browser
+app.get('/api/stats',(req,res)=>{
+  res.json({
+    chainId: CHAIN_ID, 
+    blockNumber, 
+    genesisAccounts: accounts.length, 
+    faucetBankBalanceNGN: "UNLIMITED",
+    faucetPerClaim: "100 NGN",
+    status: "live"
+  });
 });
 
 app.post('/compile',(req,res)=>{
@@ -57,17 +72,15 @@ app.post('/faucet', async (req,res)=>{
     if(!address||!/^0x[a-fA-F0-9]{40}$/.test(address)) return res.status(400).json({error:'Invalid address'});
     const to=address.toLowerCase();
     const from=accounts[0].toLowerCase();
-    if((balances[from]||0n) < FAUCET_AMOUNT) return res.status(500).json({error:'Faucet empty'});
     balances[from]-=FAUCET_AMOUNT;
     balances[to]=(balances[to]||0n)+FAUCET_AMOUNT;
     blockNumber++;
-    const txHash=ethers.keccak256(ethers.toUtf8Bytes(Date.now()+address));
+    const txHash=ethers.keccak256(ethers.toUtf8Bytes(Date.now()+address+Math.random()));
     transactions[txHash]={hash:txHash, from:accounts[0], to:address, value: FAUCET_AMOUNT.toString()};
     res.json({success:true, txHash, amount:'100 NGN'});
   }catch(e){res.status(500).json({error:e.message});}
 });
 
-// RPC - Main chain endpoint
 app.post('/', async (req,res)=>{
   const {method, params, id}=req.body;
   try{
@@ -121,4 +134,4 @@ app.get('/trader',(req,res)=>res.sendFile(path.join(__dirname,'public','trader',
 app.get('/explorer',(req,res)=>res.sendFile(path.join(__dirname,'public','explorer','index.html')));
 app.get('/studio',(req,res)=>res.sendFile(path.join(__dirname,'public','studio','index.html')));
 
-app.listen(PORT,'0.0.0.0',()=>console.log(`✅ NGN 777 LIVE on ${PORT} - Block ${blockNumber}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`✅ NGN 777 LIVE on ${PORT} | 987T Bank Active (Hidden)`));
