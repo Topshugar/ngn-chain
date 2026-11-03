@@ -1,5 +1,5 @@
 {
-  "name": "ngn-chain-777",
+  "name": "ngn-chain",
   "version": "1.0.0",
   "description": "NGN Chain 777 - Mobile-first EVM Layer 1 built in Lagos for builders without laptops. Chain ID 777, Native NGN, 3s block time.",
   "main": "server.js",
@@ -19,7 +19,7 @@
   "homepage": "https://ngn-chain.onrender.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Topshugar/ngn-chain-777.git"
+    "url": "https://github.com/Topshugar/NGN-chain.git"
   },
   "engines": {
     "node": ">=18.0.0",
