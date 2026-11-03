@@ -1,0 +1,18 @@
+{
+  "name": "NGN Chain 777 Miner",
+  "short_name": "NGN Miner",
+  "description": "Mine NGN Chain 777 from your phone - 50 NGN per block",
+  "start_url": "/miner",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00c076",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzAwYzA3NiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjI4MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0id2hpdGUiPvCfpYw8L3RleHQ+PC9zdmc+",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
