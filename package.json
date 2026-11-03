@@ -19,14 +19,15 @@
   "homepage": "https://ngn-chain.onrender.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ngn-chain-777.git"
+    "url": "https://github.com/Topshugar/ngn-chain-777.git"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start": "node server.js",
+    "generate-readme": "node scripts/generate-readme.js",
+    "start": "npm run generate-readme && node server.js",
     "dev": "nodemon server.js",
     "chain:info": "node -e \"console.log('NGN Chain 777 | ChainId 777 | RPC POST /')\"",
     "clean": "rm -rf node_modules package-lock.json && npm install"
