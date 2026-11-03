@@ -1,61 +1,117 @@
-# NGN Chain 777 • Mobile-First L1
+# NGN Chain 777 — The Mobile Chain
+**Built in Lagos, for builders without laptops.**
 
-**Built in Lagos for builders without laptops.**
+> **LIVE:** Block #3 | 2026-11-03 | 1 USD ≈ **1345.87 NGN** | Faucet Bank: 538000000000000 NGN | Auto-Updated
 
-NGN Chain 777 is a mobile-first EVM chain (Chain ID: 777) with 538 Trillion NGN genesis. Testnet gas is free — 100 NGN = $0 USD, not real Naira.
+Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RPC: https://ngn-chain.onrender.com
 
-**Live RPC:** https://ngn-chain.onrender.com
-**Live Block:** #58 • **Faucet Bank:** 538,000,000,000,000 NGN • **README Auto-Generated:** 2026-11-03
+🌐 Live: https://ngn-chain.onrender.com
+📱 Studio: https://ngn-chain.onrender.com/studio/
+🔍 Explorer: https://ngn-chain.onrender.com/explorer/
+💼 Trader: https://ngn-chain.onrender.com/trader/
 
-### 🔗 Routes (Auto-Discovered)
+### Auto-Discovered Routes (Live from /public)
+- https://ngn-chain.onrender.com/explorer
+- https://ngn-chain.onrender.com/faucet
+- https://ngn-chain.onrender.com/studio
+- https://ngn-chain.onrender.com/trader
 
-| Route | What It Does |
-|-------|--------------|
-| `/` | Main Dashboard + Faucet |
-| `/explorer` | Block Explorer |
-| `/faucet` | FAUCET Module |
-| `/studio` | Mobile Contract Studio |
-| `/trader` | Mobile Wallet |
-| `/logo.svg` | Chain Logo |
+### Live FX Rate (CBN)
+- **1 USD ≈ 1345.87 NGN** — Updated: 2026-11-03
+- **1 NGN Test Token = $0** — Faucet only
 
-### 🪙 Tokenomics (Live)
+### Why NGN Chain?
+99% of Nigerian Web3 users only have a phone. Existing chains require Laptop + MetaMask desktop + Alchemy/Infura keys + $20 gas. NGN Chain removes all of that.
 
-- **Chain ID:** 777 (0x309)
-- **Symbol:** NGN
-- **Total Supply:** 538,000,000,000,000 NGN (538T)
-- **Live Block:** 58
-- **Faucet Bank:** 538,000,000,000,000 NGN
-- **Faucet:** 100 NGN / wallet / 24h — Test gas $0
-- **Note:** Not real Naira. Not affiliated with CBN. Mainnet price TBA.
+- Works inside Trust Wallet Browser natively
+- Free 100 NGN faucet daily — Bank: 538000000000000 NGN (never dry)
+- No API keys, no gatekeeping
+- Custom derivation path m/44'/777'/0'/0/0
+- Compile & deploy directly from mobile
 
-**Live FX:** 1 USD ≈ 1345.87 NGN (Market rate, auto-updated 2026-11-03). NGN Chain testnet NGN = $0 until mainnet.
+### Quick Start (Phone Only)
+**1. Add NGN Chain to Wallet**
+Network Name: NGN Chain 777
+RPC URL: https://ngn-chain.onrender.com
+Chain ID: 777 (0x309)
+Symbol: NGN
 
-### 📱 Why Mobile-First?
+**2. Claim Faucet**
+```bash
+curl -X POST https://ngn-chain.onrender.com/faucet -H "Content-Type: application/json" -d '{"address":"0xYourAddress"}'
+```
+Or use Studio UI: https://ngn-chain.onrender.com/studio/
 
-Works inside Trust Wallet browser. m/44'/777' path, Solidity ^0.8.20, deploy from phone.
+**3. Deploy Contract from Phone**
+Open https://ngn-chain.onrender.com/studio/ in Trust Wallet Browser > Generate wallet (HD path 777) > Claim 100 NGN > Paste Solidity > Compile → Deploy
 
-### 🛠️ Add to Wallet
+### Architecture
+Studio: /studio/ — Wallet Gen + Faucet + Compiler
+Explorer: /explorer/ — Live blocks/txs
+Trader: /trader/
+RPC Layer: POST / — Full EVM JSON-RPC (Ganache 7.9.2, 3s blocks, Shanghai)
+Chain ID 777 — m/44'/777'
 
-```js
-{
-  chainId: '0x309',
-  chainName: 'NGN Chain 777 Testnet',
-  rpcUrls: ['https://ngn-chain.onrender.com'],
-  nativeCurrency: { name: 'NGN', symbol: 'NGN', decimals: 18 },
-  blockExplorerUrls: ['https://ngn-chain.onrender.com/explorer'],
-  iconUrls: ['https://ngn-chain.onrender.com/logo.svg']
-}
+### Tech Stack
+Runtime: Node.js 18+ / Express 4
+Chain: Ganache 7.9.2 (EVM)
+Compiler: solc 0.8.19
+Wallet: ethers.js 5.7.2 + BIP39/BIP32
+Frontend: Vanilla HTML/CSS/JS — No build step, mobile-first
+
+### API
+**RPC (EVM Compatible)**
+`POST / { "jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": [] }`
+Supported: eth_accounts, eth_getBalance, eth_sendTransaction, eth_call, eth_estimateGas, etc.
+
+**Faucet**
+POST /faucet Body: { "address": "0x..." } Response: { success, txHash, amount: "100 NGN" } Rate limit: 1 per address + IP / 24h
+
+**Compiler**
+POST /compile Body: { "source": "pragma solidity..." }
+
+**Stats**
+GET /health → { status, chainId, uptime }
+GET /api/stats → { blockNumber: 3, genesisAccounts: 10, faucetBankBalanceNGN: "538000000000000" }
+
+### Local Development
+```bash
+git clone https://github.com/Topshugar/NGN-chain.git
+cd NGN-chain
+npm install
+npm run dev
 ```
 
-### 🚰 Faucet
+### Roadmap
+- [x] Chain ID 777 + custom derivation path
+- [x] Mobile Studio (generate, faucet, compile, deploy)
+- [x] Live Explorer
+- [x] Faucet with rate limiting
+- [x] Professional RPC (JSON-RPC 2.0)
+- [x] Auto-README with live CBN rate — Added 2026-11-03
+- [ ] Contract verification in explorer
+- [ ] Public testnet with persistent DB
+- [ ] Bridge to Base / Lisk
+- [ ] NGN Stable Token (naira-pegged)
 
-`POST /faucet` → { "address": "0x..." } → 100 NGN
+### Use Cases Built on NGN 777
+Education: Students learn Solidity on phone
+Payments: Market traders P2P via QR, 3s settlement
+Creators: Artists mint NFTs from studio
+Community Savings: Transparent Ajo on-chain
 
-### 🤖 Auto-Generation
+### Security
+Faucet rate-limited by address + IP (24h)
+Compiler input limited to 50kb
+CORS enabled for wallet browsers
+No private keys stored server-side — all wallet generation client-side
 
-This README is auto-generated by `scripts/generate-readme.js` — scans public/ + fetches live rate + block.
+### Stats (Live)
+- **Current Block:** #3
+- **Faucet Bank:** 538000000000000 NGN
+- **Genesis Accounts:** 10
+- **Live CBN Rate:** 1 USD ≈ 1345.87 NGN on 2026-11-03
 
-Run: `node scripts/generate-readme.js`
+License: MIT — Built in Lagos, Open for Everyone.
 
----
-**NGN CHAIN 777 • BUILT IN LAGOS • AUTO-README • 2026-11-03 • Block #58**
+**Made with ❤️ in Lagos — Chain 777 — Block #3 — 1345.87 NGN/USD — 2026-11-03**
