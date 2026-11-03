@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NGN Chain 777 - Add to MetaMask</title>
+<style>
+body{background:#0a3d2e;color:white;font-family:Inter,sans-serif;padding:24px;text-align:center}
+.card{background:#112a22;padding:24px;border-radius:16px;border:1px solid #FFD700;margin-top:20px}
+button{background:#FFD700;color:#0a3d2e;border:none;padding:16px 24px;border-radius:12px;font-weight:900;font-size:18px;width:100%;margin-top:12px}
+small{color:#8aa89d}
+</style>
+</head>
+<body>
+<img src="/logo.svg" width="80" style="border-radius:16px"><br><br>
+<h2>NGN Chain 777</h2>
+<small>Chain ID 777 | Lagos Built</small>
+
+<div class="card">
+<h3>Add to MetaMask</h3>
+<p>Tap button below inside MetaMask Browser</p>
+<button onclick="addChain()">Add NGN Chain 777</button>
+<button onclick="window.location.href='/trader/'" style="background:transparent;border:1px solid #FFD700;color:#FFD700">Open Trader After Adding</button>
+<p id="status"></p>
+</div>
+
+<script>
+async function addChain(){
+  const status = document.getElementById('status');
+  if(!window.ethereum){ status.innerText='Open this page INSIDE MetaMask Browser'; return; }
+  try{
+    await window.ethereum.request({
+      method:'wallet_addEthereumChain',
+      params:[{
+        chainId:'0x309',
+        chainName:'NGN Chain 777',
+        nativeCurrency:{name:'NGN', symbol:'NGN', decimals:18},
+        rpcUrls:['https://ngn-chain.onrender.com'],
+        blockExplorerUrls:['https://ngn-chain.onrender.com/explorer/']
+      }]
+    });
+    status.innerText='✅ Added! Now switch network to NGN Chain 777 in MetaMask and open Trader';
+  }catch(e){
+    if(e.code===4902){ status.innerText='Already added, just switch to it'; }
+    else{ status.innerText='Error: '+e.message; }
+  }
+}
+</script>
+</body>
+</html>
