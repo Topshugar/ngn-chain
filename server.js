@@ -34,7 +34,6 @@ function loadChain(){
       blockNumber = data.blockNumber || blocks.length;
       txStore = data.txStore || {};
       receiptStore = data.receiptStore || {};
-      // balances saved as strings
       balances = {};
       Object.entries(data.balances || {}).forEach(([k,v])=>{
         try{ balances[k] = BigInt(v); }catch{ balances[k]=0n; }
@@ -51,7 +50,6 @@ function loadChain(){
 
 function saveChain(){
   try{
-    // convert BigInt balances to string for JSON
     const balancesStr = {};
     Object.entries(balances).forEach(([k,v])=>{ balancesStr[k]=v.toString(); });
     const data = {
@@ -72,7 +70,6 @@ function saveChain(){
 
 const loaded = loadChain();
 
-// Faucet wallet
 const FAUCET_PK = process.env.FAUCET_PRIVATE_KEY || "0x"+"1".repeat(64);
 const faucetWallet = new ethers.Wallet(FAUCET_PK);
 const FAUCET_ADDR = faucetWallet.address.toLowerCase();
@@ -83,7 +80,7 @@ if(!loaded || balances[FAUCET_ADDR]===undefined){
   saveChain();
 }
 
-console.log("=== NGN CHAIN 777 - REAL CHAIN v2 + PERSIST ===");
+console.log("=== NGN CHAIN 777 - REAL + PERSIST + MINING ===");
 console.log("Faucet:", faucetWallet.address);
 console.log("Balance:", ethers.formatEther(balances[FAUCET_ADDR] || 0n), "NGN");
 console.log("ChainId:", CHAIN_ID, "Blocks:", blocks.length);
@@ -108,14 +105,93 @@ function mineBlock(txs){
   return newBlock;
 }
 
+// === SATOSHI MINING LOGIC ===
+let difficulty = 4; // phones can mine this, increase later to 5
+function hashBlockForMining(num, parentHash, nonce, timestamp){
+  return ethers.keccak256(ethers.toUtf8Bytes(`${num}${parentHash}${nonce}${timestamp}`));
+}
+function getRewardForHeight(height){
+  if(height < 100000) return "50";
+  if(height < 200000) return "25";
+  if(height < 300000) return "12.5";
+  return "6.25";
+}
+
 // === PAGES ===
 app.get('/explorer', (req,res)=> res.sendFile(path.join(__dirname,'public','explorer','index.html')));
 app.get('/faucet', (req,res)=> res.sendFile(path.join(__dirname,'public','faucet','index.html')));
 app.get('/studio', (req,res)=> res.sendFile(path.join(__dirname,'public','studio','index.html')));
 app.get('/trader', (req,res)=> res.sendFile(path.join(__dirname,'public','trader','index.html')));
+app.get('/miner', (req,res)=> res.sendFile(path.join(__dirname,'public','miner','index.html')));
 
-app.get('/health', (req,res)=> res.json({ status:'alive', chainId:CHAIN_ID, blockHeight:blockNumber, faucet: faucetWallet.address, realChain:true, persistent:true, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
-app.get('/api/stats', (req,res)=> res.json({ blockNumber, chainId:CHAIN_ID, real:true, persistent:true, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
+app.get('/health', (req,res)=> res.json({ status:'alive', chainId:CHAIN_ID, blockHeight:blockNumber, blocks:blocks.length, faucet: faucetWallet.address, realChain:true, persistent:true, mining:true, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
+app.get('/api/stats', (req,res)=> res.json({ blockNumber, chainId:CHAIN_ID, real:true, persistent:true, mining:true, difficulty, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
+
+// Mining APIs
+app.get('/api/difficulty', (req,res)=>{
+  const parent = blocks[blocks.length-1];
+  res.json({
+    difficulty,
+    blockHeight: blockNumber,
+    parentHash: parent.hash,
+    reward: getRewardForHeight(blockNumber),
+    targetPrefix: "0".repeat(difficulty)
+  });
+});
+
+app.post('/api/mine', (req,res)=>{
+  try{
+    const { miner, nonce } = req.body;
+    if(!miner || !/^0x[a-fA-F0-9]{40}$/.test(miner)) return res.status(400).json({error:"invalid miner address"});
+    
+    const parent = blocks[blocks.length-1];
+    const timestamp = Math.floor(Date.now()/1000);
+    const hash = hashBlockForMining(blockNumber, parent.hash, nonce, timestamp);
+    
+    if(!hash.startsWith("0x" + "0".repeat(difficulty))){
+      return res.status(400).json({error:"Invalid PoW - hash does not meet difficulty", hash, required: "0".repeat(difficulty)});
+    }
+
+    // Prevent re-mining same nonce quickly
+    if(blocks.find(b=>b.hash===hash)) return res.status(400).json({error:"Block already mined"});
+
+    const rewardStr = getRewardForHeight(blockNumber);
+    const reward = ethers.parseEther(rewardStr);
+
+    setBalance(miner.toLowerCase(), getBalance(miner.toLowerCase()) + reward);
+    nonces[miner.toLowerCase()] = nonces[miner.toLowerCase()] || 0;
+
+    const block = {
+      number: blockNumber,
+      hash,
+      parentHash: parent.hash,
+      timestamp,
+      nonce,
+      miner: miner.toLowerCase(),
+      transactions: [],
+      reward: `${rewardStr} NGN`,
+      gasLimit: "0x1c9c380",
+      gasUsed: "0x0"
+    };
+
+    blocks.push(block);
+    blockNumber++;
+    saveChain();
+
+    res.json({success:true, block, reward:`${rewardStr} NGN`, newBalance: ethers.formatEther(getBalance(miner.toLowerCase())), hash});
+  }catch(e){
+    res.status(500).json({error:e.message});
+  }
+});
+
+app.get('/api/wallets', (req,res)=>{
+  const list = Object.entries(balances).map(([addr,bal])=>({
+    address: addr,
+    balance: ethers.formatEther(bal),
+    nonce: nonces[addr]||0
+  })).sort((a,b)=> parseFloat(b.balance) - parseFloat(a.balance));
+  res.json({ totalWallets: list.length, wallets: list.slice(0,100) });
+});
 
 // Verify
 app.post('/api/verify', (req,res)=>{
@@ -129,7 +205,7 @@ app.post('/api/verify', (req,res)=>{
 app.get('/api/contract/:addr', (req,res)=> res.json(contractsMap[req.params.addr.toLowerCase()]||{verified:false}));
 app.get('/api/verify/list', (req,res)=> res.json(verifiedContracts));
 
-// === REAL FAUCET ===
+// === FAUCET (Testnet) ===
 const faucetClaims=new Map();
 app.post('/faucet', async (req,res)=>{
   try{
@@ -169,7 +245,7 @@ app.post('/faucet', async (req,res)=>{
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// === REAL RPC ===
+// === RPC ===
 app.post('/', (req,res)=>{
   const { method, params, id } = req.body;
   try{
@@ -208,4 +284,4 @@ app.post('/', (req,res)=>{
   }catch(e){ res.json({jsonrpc:"2.0",id,error:{code:-32603,message:e.message}}); }
 });
 
-app.listen(PORT, ()=> console.log(`NGN Chain 777 REAL+PERSIST live on ${PORT}`));
+app.listen(PORT, ()=> console.log(`NGN Chain 777 REAL+PERSIST+MINING live on ${PORT}`));
