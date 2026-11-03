@@ -1,8 +1,3 @@
-// ============================================
-// NGN CHAIN 777 - 538 TRILLION GENESIS
-// Persistent Mainnet + Faucet Reset
-// ============================================
-
 const express = require('express');
 const cors = require('cors');
 const ganache = require('ganache');
@@ -18,8 +13,6 @@ const MNEMONIC = process.env.MNEMONIC || "abandon abandon abandon abandon abando
 const FAUCET_AMOUNT_HEX = '0x56BC75E2D63100000';
 const FAUCET_AMOUNT_LABEL = '100 NGN';
 const FAUCET_COOLDOWN = 24 * 60 * 60 * 1000;
-
-// 538 TRILLION NGN in wei hex
 const GENESIS_BALANCE_HEX = '0x' + (BigInt('538000000000000') * BigInt(10)**BigInt(18)).toString(16);
 
 function getLogoSVG(size = 256) {
@@ -135,10 +128,8 @@ app.post('/faucet', async (req, res) => {
     faucetClaimedByAddress.set(low, Date.now());
     faucetClaimedByIP.set(ip, Date.now());
     saveFaucetDB();
-    console.log(`[FAUCET] 100 NGN -> ${address} tx:${txHash}`);
     res.json({ success:true, txHash, amount:FAUCET_AMOUNT_LABEL });
   } catch(e) { 
-    console.log('[FAUCET ERROR]', e.message);
     res.status(500).json({ error:e.message }); 
   }
 });
@@ -149,39 +140,49 @@ function brandHTML(filePath) {
     let html = fs.readFileSync(filePath,'utf8');
     if (!html.toLowerCase().includes('logo.svg')) html = html.replace('<head>','<head><link rel="icon" href="/logo.svg">');
     html = html.replace('<div class="dot">N</div>','<img src="/logo.svg" style="width:28px;height:28px;border-radius:8px">');
-    // INJECT TRADER BUTTON INTO HOME PAGE ONLY
-    if (filePath.includes('public'+path.sep+'index.html') || filePath.endsWith(path.sep+'index.html')) {
-      if (!html.includes('/trader.html')) {
-        html = html.replace(/OPEN STUDIO.*?<\/a>/i, (m) => {
-          return m + `\n<a href="/trader.html" style="display:flex;align-items:center;justify-content:center;height:52px;background:#00ff88;color:#000;border-radius:14px;font-weight:800;text-decoration:none;margin-top:10px;letter-spacing:-.02em">OPEN TRADER →</a>`;
-        });
-      }
-    }
     return html;
   } catch { return null; }
 }
 
+function injectTrader(html) {
+  if (html.includes('/trader.html') || html.includes('OPEN TRADER')) return html;
+  const btn = `<a href="/trader.html" style="display:flex;align-items:center;justify-content:center;height:52px;background:#00ff88;color:#000;border-radius:14px;font-weight:800;text-decoration:none;margin-top:10px;letter-spacing:-.02em">OPEN TRADER →</a>`;
+  if (html.includes('/studio')) return html.replace(/(href="\/studio[^"]*".*?<\/a>)/is, `$1${btn}`);
+  return html.replace('</body>', `${btn}</body>`);
+}
+
 app.use(express.static(path.join(__dirname,'public')));
 
-// === TRADER ROUTES - NEW ===
 app.get('/trader', (req,res) => {
   const p1 = path.join(__dirname,'public','trader.html');
   const p2 = path.join(__dirname,'trader.html');
-  if (fs.existsSync(p1)) { const b=brandHTML(p1); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} return res.sendFile(p1); }
+  if (fs.existsSync(p1)) return res.sendFile(p1);
   if (fs.existsSync(p2)) return res.sendFile(p2);
-  res.status(404).send('trader.html not found - add it to public/trader.html');
+  res.status(404).send('Add public/trader.html');
 });
 app.get('/trader.html', (req,res) => {
   const p1 = path.join(__dirname,'public','trader.html');
   const p2 = path.join(__dirname,'trader.html');
-  if (fs.existsSync(p1)) { const b=brandHTML(p1); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} return res.sendFile(p1); }
+  if (fs.existsSync(p1)) return res.sendFile(p1);
   if (fs.existsSync(p2)) return res.sendFile(p2);
-  res.status(404).send('trader.html not found - add it to public/trader.html');
+  res.status(404).send('Add public/trader.html');
 });
 
-app.get('/', (req,res) => { const b=brandHTML(path.join(__dirname,'public','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','index.html')); });
-app.get('/studio', (req,res) => { const b=brandHTML(path.join(__dirname,'public','studio','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','studio','index.html')); });
-app.get('/explorer', (req,res) => { const b=brandHTML(path.join(__dirname,'public','explorer','index.html')); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(path.join(__dirname,'public','explorer','index.html')); });
+app.get('/', (req,res) => {
+  const fp = path.join(__dirname,'public','index.html');
+  if (fs.existsSync(fp)) {
+    let html = fs.readFileSync(fp,'utf8');
+    const b = brandHTML(fp);
+    html = b || html;
+    html = injectTrader(html);
+    res.setHeader('Content-Type','text/html');
+    return res.send(html);
+  }
+  res.sendFile(fp);
+});
+
+app.get('/studio', (req,res) => { const fp = path.join(__dirname,'public','studio','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
+app.get('/explorer', (req,res) => { const fp = path.join(__dirname,'public','explorer','index.html'); const b=brandHTML(fp); if(b){ res.setHeader('Content-Type','text/html'); return res.send(b);} res.sendFile(fp); });
 
 app.post('/', async (req,res) => {
   try {
