@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const PORT = process.env.PORT || 10000;
 const CHAIN_ID = 777;
 const SAVE_PATH = path.join(__dirname, 'chain.json');
+const TRADER_PATH = path.join(__dirname, 'trader.json');
 
 // === PERSISTENCE ===
 let chainIdHex = "0x309";
@@ -80,7 +81,7 @@ if(!loaded || balances[FAUCET_ADDR]===undefined){
   saveChain();
 }
 
-console.log("=== NGN CHAIN 777 - REAL + PERSIST + MINING ===");
+console.log("=== NGN CHAIN 777 - REAL + PERSIST + MINING + FREE FLOAT ===");
 console.log("Faucet:", faucetWallet.address);
 console.log("Balance:", ethers.formatEther(balances[FAUCET_ADDR] || 0n), "NGN");
 console.log("ChainId:", CHAIN_ID, "Blocks:", blocks.length);
@@ -106,7 +107,7 @@ function mineBlock(txs){
 }
 
 // === SATOSHI MINING LOGIC ===
-let difficulty = 4; // phones can mine this, increase later to 5
+let difficulty = 4;
 function hashBlockForMining(num, parentHash, nonce, timestamp){
   return ethers.keccak256(ethers.toUtf8Bytes(`${num}${parentHash}${nonce}${timestamp}`));
 }
@@ -117,6 +118,18 @@ function getRewardForHeight(height){
   return "6.25";
 }
 
+// === FREE FLOAT TRADER (SATOSHI MODEL) ===
+let traderState = { price: 0.0001, trades: [] };
+function loadTrader(){
+ try{
+   if(fs.existsSync(TRADER_PATH)){
+     traderState = JSON.parse(fs.readFileSync(TRADER_PATH,'utf8'));
+   }
+ }catch(e){ console.log("Trader load fail", e.message); }
+}
+function saveTrader(){ try{ fs.writeFileSync(TRADER_PATH, JSON.stringify(traderState)); }catch(e){} }
+loadTrader();
+
 // === PAGES ===
 app.get('/explorer', (req,res)=> res.sendFile(path.join(__dirname,'public','explorer','index.html')));
 app.get('/faucet', (req,res)=> res.sendFile(path.join(__dirname,'public','faucet','index.html')));
@@ -124,8 +137,8 @@ app.get('/studio', (req,res)=> res.sendFile(path.join(__dirname,'public','studio
 app.get('/trader', (req,res)=> res.sendFile(path.join(__dirname,'public','trader','index.html')));
 app.get('/miner', (req,res)=> res.sendFile(path.join(__dirname,'public','miner','index.html')));
 
-app.get('/health', (req,res)=> res.json({ status:'alive', chainId:CHAIN_ID, blockHeight:blockNumber, blocks:blocks.length, faucet: faucetWallet.address, realChain:true, persistent:true, mining:true, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
-app.get('/api/stats', (req,res)=> res.json({ blockNumber, chainId:CHAIN_ID, real:true, persistent:true, mining:true, difficulty, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)) }));
+app.get('/health', (req,res)=> res.json({ status:'alive', chainId:CHAIN_ID, blockHeight:blockNumber, blocks:blocks.length, faucet: faucetWallet.address, realChain:true, persistent:true, mining:true, freeFloat:true, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)), traderPrice: traderState.price }));
+app.get('/api/stats', (req,res)=> res.json({ blockNumber, chainId:CHAIN_ID, real:true, persistent:true, mining:true, difficulty, faucetBalance: ethers.formatEther(getBalance(FAUCET_ADDR)), traderPrice: traderState.price }));
 
 // Mining APIs
 app.get('/api/difficulty', (req,res)=>{
@@ -143,24 +156,17 @@ app.post('/api/mine', (req,res)=>{
   try{
     const { miner, nonce } = req.body;
     if(!miner || !/^0x[a-fA-F0-9]{40}$/.test(miner)) return res.status(400).json({error:"invalid miner address"});
-    
     const parent = blocks[blocks.length-1];
     const timestamp = Math.floor(Date.now()/1000);
     const hash = hashBlockForMining(blockNumber, parent.hash, nonce, timestamp);
-    
     if(!hash.startsWith("0x" + "0".repeat(difficulty))){
       return res.status(400).json({error:"Invalid PoW - hash does not meet difficulty", hash, required: "0".repeat(difficulty)});
     }
-
-    // Prevent re-mining same nonce quickly
     if(blocks.find(b=>b.hash===hash)) return res.status(400).json({error:"Block already mined"});
-
     const rewardStr = getRewardForHeight(blockNumber);
     const reward = ethers.parseEther(rewardStr);
-
     setBalance(miner.toLowerCase(), getBalance(miner.toLowerCase()) + reward);
     nonces[miner.toLowerCase()] = nonces[miner.toLowerCase()] || 0;
-
     const block = {
       number: blockNumber,
       hash,
@@ -173,15 +179,55 @@ app.post('/api/mine', (req,res)=>{
       gasLimit: "0x1c9c380",
       gasUsed: "0x0"
     };
-
     blocks.push(block);
     blockNumber++;
     saveChain();
-
     res.json({success:true, block, reward:`${rewardStr} NGN`, newBalance: ethers.formatEther(getBalance(miner.toLowerCase())), hash});
   }catch(e){
     res.status(500).json({error:e.message});
   }
+});
+
+// Trader APIs - FREE FLOAT
+app.get('/api/trader/price', (req,res)=>{
+  const total = Object.values(balances).reduce((a,b)=>a+b,0n);
+  const supply = parseFloat(ethers.formatEther(total));
+  res.json({ price: traderState.price, supply: supply.toFixed(2), block: blockNumber, trades: traderState.trades, change: traderState.trades.length>1 ? ((traderState.price / traderState.trades[0].price -1)*100).toFixed(2)+'% since genesis' : 'genesis - be first!' });
+});
+
+app.post('/api/trader/trade', (req,res)=>{
+  try{
+    const { wallet, amount, side } = req.body;
+    if(!wallet || !/^0x[a-fA-F0-9]{40}$/.test(wallet)) return res.json({error:"invalid wallet"});
+    if(!amount || amount<=0) return res.json({error:"invalid amount"});
+    const addr = wallet.toLowerCase();
+    const amtBig = ethers.parseEther(amount.toString());
+    
+    if(side==='sell'){
+      if(getBalance(addr) < amtBig) return res.json({error:"insufficient NGN balance to sell - mine or buy first"});
+      setBalance(addr, getBalance(addr) - amtBig);
+    } else {
+      setBalance(addr, getBalance(addr) + amtBig);
+      // create a tx for buy to persist
+      const nonce = nonces[FAUCET_ADDR]||0;
+      const txHash = ethers.keccak256(ethers.toUtf8Bytes(`${FAUCET_ADDR}-${addr}-${nonce}-${Date.now()}-trade`));
+      const tx = { hash: txHash, from: FAUCET_ADDR, to: addr, value: "0x"+amtBig.toString(16), nonce: "0x"+nonce.toString(16), blockNumber:"0x"+blockNumber.toString(16), chainId: chainIdHex };
+      txStore[txHash]=tx;
+      receiptStore[txHash]={transactionHash:txHash,status:"0x1",blockNumber:tx.blockNumber};
+      mineBlock([tx]);
+      nonces[FAUCET_ADDR]=nonce+1;
+    }
+
+    const impact = (parseFloat(amount) / 100) * 0.001; 
+    if(side==='buy') traderState.price = traderState.price * (1 + impact);
+    else traderState.price = Math.max(0.00001, traderState.price * (1 - impact));
+
+    traderState.trades.push({ wallet: addr, amount: parseFloat(amount), side, price: traderState.price, time: Date.now() });
+    if(traderState.trades.length>500) traderState.trades.shift();
+    saveTrader(); saveChain();
+
+    res.json({success:true, price: traderState.trades[traderState.trades.length-1].price, newPrice: traderState.price, newBalance: ethers.formatEther(getBalance(addr))});
+  }catch(e){ res.json({error:e.message}); }
 });
 
 app.get('/api/wallets', (req,res)=>{
@@ -193,7 +239,6 @@ app.get('/api/wallets', (req,res)=>{
   res.json({ totalWallets: list.length, wallets: list.slice(0,100) });
 });
 
-// Verify
 app.post('/api/verify', (req,res)=>{
   const {address,contractName,source}=req.body;
   const data={address:address.toLowerCase(),contractName:contractName||"Contract",source,verified:true,verifiedAt:new Date().toISOString()};
@@ -205,7 +250,6 @@ app.post('/api/verify', (req,res)=>{
 app.get('/api/contract/:addr', (req,res)=> res.json(contractsMap[req.params.addr.toLowerCase()]||{verified:false}));
 app.get('/api/verify/list', (req,res)=> res.json(verifiedContracts));
 
-// === FAUCET (Testnet) ===
 const faucetClaims=new Map();
 app.post('/faucet', async (req,res)=>{
   try{
@@ -214,12 +258,10 @@ app.post('/faucet', async (req,res)=>{
     const ip=req.ip; const key=`${address.toLowerCase()}-${ip}`;
     const last=faucetClaims.get(key);
     if(last && Date.now()-last < 6*60*60*1000) return res.status(429).json({error:"Rate limit 6h"});
-
     const to = address.toLowerCase();
     const amount = ethers.parseEther("100");
     const faucetBal = getBalance(FAUCET_ADDR);
     if(faucetBal < amount) return res.status(500).json({error:"Faucet empty"});
-
     const nonce = nonces[FAUCET_ADDR] || 0;
     const tx = {
       hash: ethers.keccak256(ethers.toUtf8Bytes(`${FAUCET_ADDR}-${to}-${nonce}-${Date.now()}`)),
@@ -232,7 +274,6 @@ app.post('/faucet', async (req,res)=>{
       blockNumber: "0x"+blockNumber.toString(16),
       chainId: chainIdHex
     };
-
     setBalance(FAUCET_ADDR, faucetBal - amount);
     setBalance(to, getBalance(to) + amount);
     nonces[FAUCET_ADDR] = nonce+1;
@@ -240,12 +281,10 @@ app.post('/faucet', async (req,res)=>{
     receiptStore[tx.hash] = { transactionHash:tx.hash, status:"0x1", blockNumber:tx.blockNumber, from:tx.from, to:tx.to, gasUsed:"0x5208" };
     mineBlock([tx]);
     faucetClaims.set(key, Date.now());
-
     res.json({success:true, txHash: tx.hash, real:true, amount:"100 NGN", newBalance: ethers.formatEther(getBalance(to))});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// === RPC ===
 app.post('/', (req,res)=>{
   const { method, params, id } = req.body;
   try{
@@ -284,4 +323,4 @@ app.post('/', (req,res)=>{
   }catch(e){ res.json({jsonrpc:"2.0",id,error:{code:-32603,message:e.message}}); }
 });
 
-app.listen(PORT, ()=> console.log(`NGN Chain 777 REAL+PERSIST+MINING live on ${PORT}`));
+app.listen(PORT, ()=> console.log(`NGN Chain 777 REAL+PERSIST+MINING+FREE_FLOAT live on ${PORT} price $${traderState.price}`));
