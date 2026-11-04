@@ -17,7 +17,7 @@ body{background:var(--bg);color:#fff;font-family:Inter,sans-serif;padding:16px}
 .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .price{font-size:32px;font-weight:700}.price span{font-size:14px;color:var(--muted)}
 .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #151515;font-size:13px;color:#aaa}.row b{color:#fff}
-.input,select{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;margin-top:8px}
+.input{width:100%;padding:12px;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;color:#fff;margin-top:8px}
 .btn{width:100%;padding:12px;border-radius:10px;border:0;font-weight:700;cursor:pointer;margin-top:10px}
 .buy{background:var(--green);color:#000}.sell{background:var(--red);color:#fff}
 .tabs{display:flex;gap:8px;margin-bottom:12px}.tab{padding:8px 12px;border-radius:10px;background:#0f0f0f;border:1px solid var(--border);font-size:12px;color:#888;cursor:pointer}.tab.active{background:#fff;color:#000}
@@ -26,44 +26,78 @@ body{background:var(--bg);color:#fff;font-family:Inter,sans-serif;padding:16px}
 </style>
 </head>
 <body>
-<div class="top"><div class="logo-wrap"><div class="logo-icon">₦</div><div><h2>NGN Chain 777 • Trader <span class="chip">FREE FLOAT</span></h2><div style="font-size:10px;color:var(--muted)">SATOSHI MODEL • MARKET SETS PRICE</div></div></div><a href="/">Home</a></div>
+
+<!-- header -->
+<div class="top">
+  <div class="logo-wrap"><div class="logo-icon">₦</div><div><h2>NGN Chain 777 • Trader <span class="chip">FREE FLOAT</span></h2><div style="font-size:10px;color:var(--muted)">L1 EVM • CHAIN 777 • FREE FLOAT</div></div></div>
+  <a href="/">Home</a>
+</div>
+
 <div class="grid">
+
+<!-- chart -->
 <div class="card">
-<div class="label">NGN / USD • Free Float • Market Determined</div>
+<div class="label">NGN / USD • Free Float • Real Stats</div>
 <div class="price" id="price">$0.0001 <span id="change">—</span></div>
-<div style="margin-top:6px;font-size:11px;color:#666">Supply: <span id="supply">—</span> NGN • Last trade via AMM</div>
-<div id="chart" style="height:180px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;margin:12px 0;padding:12px;overflow-y:auto;font-size:11px;color:#888">Loading trades...</div>
+<div style="margin-top:6px;font-size:11px;color:#666">Circulating: <span id="circ">—</span> • Market Cap: <span id="mcap">—</span></div>
+<div id="chart" style="height:180px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;margin:12px 0;padding:12px;overflow-y:auto;font-size:11px;color:#888">Loading...</div>
+
+<!-- stats -->
 <div class="row"><span>Chain ID</span><b>777</b></div>
 <div class="row"><span>Block</span><b id="block">—</b></div>
-<div class="row"><span>Model</span><b>Free Float (No Peg)</b></div>
+<div class="row"><span>Circulating Supply</span><b id="supply">—</b></div>
+<div class="row"><span>Total Supply (Cap)</span><b id="totalSup">—</b></div>
+<div class="row"><span>Market Cap</span><b id="marketCap">—</b></div>
+<div class="row"><span>24h Volume</span><b id="vol">—</b></div>
+<div class="row"><span>Free Float</span><b id="freeFloat">—</b></div>
+<div class="row"><span>Holders</span><b id="holders">—</b></div>
 </div>
+
+<!-- trade -->
 <div class="card">
 <div class="tabs"><div class="tab active" id="tBuy" onclick="setSide('buy')">Buy</div><div class="tab" id="tSell" onclick="setSide('sell')">Sell</div></div>
 <div class="label">Amount (NGN)</div><input id="amount" class="input" value="100" type="number"/>
-<div class="label" style="margin-top:12px">Wallet (must have balance to sell)</div><input id="wallet" class="input" placeholder="0x..." />
+<div class="label" style="margin-top:12px">Wallet</div><input id="wallet" class="input" placeholder="0x..." />
 <button id="btn" class="btn buy" onclick="exec()">Buy NGN</button>
-<div id="msg" class="note">Price moves on every trade. No fixed $1. Early buyers get cheaper price.</div>
+<div id="msg" class="note">Real supply from chain.json. Price moves per trade.</div>
 </div>
+
 </div>
+
 <script>
+// config
 let side='buy';
-function setSide(s){side=s; document.getElementById('tBuy').className=s==='buy'?'tab active':'tab'; document.getElementById('tSell').className=s==='sell'?'tab active':'tab'; document.getElementById('btn').className=s==='buy'?'btn buy':'btn sell'; document.getElementById('btn').innerText=s==='buy'?'Buy NGN':'Sell NGN';}
+function setSide(s){ side=s; document.getElementById('tBuy').className=s==='buy'?'tab active':'tab'; document.getElementById('tSell').className=s==='sell'?'tab active':'tab'; document.getElementById('btn').className=s==='buy'?'btn buy':'btn sell'; document.getElementById('btn').innerText=s==='buy'?'Buy NGN':'Sell NGN'; }
+
+// load
 async function load(){
  try{
   const r=await fetch('/api/trader/price'); const j=await r.json();
-  document.getElementById('price').innerHTML=`$${j.price.toFixed(6)} <span id="change">${j.change}</span>`;
-  document.getElementById('supply').innerText=j.supply; document.getElementById('block').innerText=j.block;
+  document.getElementById('price').innerHTML=`$${j.price.toFixed(6)} <span>${j.change}</span>`;
+  document.getElementById('circ').innerText=`${Number(j.circulating).toLocaleString()} NGN`;
+  document.getElementById('supply').innerText=`${Number(j.circulating).toLocaleString()} NGN`;
+  document.getElementById('totalSup').innerText=`${Number(j.totalSupply).toLocaleString()} NGN`;
+  document.getElementById('mcap').innerText=`$${Number(j.marketCap).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('marketCap').innerText=`$${Number(j.marketCap).toLocaleString(undefined,{minimumFractionDigits:2})}`;
+  document.getElementById('vol').innerText=`$${Number(j.volUSD).toLocaleString(undefined,{minimumFractionDigits:2})} (${Number(j.volNGN).toLocaleString()} NGN)`;
+  document.getElementById('freeFloat').innerText=`${j.freeFloat.toFixed(2)}%`;
+  document.getElementById('holders').innerText=j.holders;
+  document.getElementById('block').innerText=j.block;
   document.getElementById('chart').innerHTML=j.trades.slice(-20).reverse().map(t=>`<div style="padding:4px 0;border-bottom:1px solid #151515">${t.side.toUpperCase()} ${t.amount} NGN @ $${t.price.toFixed(6)} • ${t.wallet.slice(0,6)}... • ${new Date(t.time).toLocaleTimeString()}</div>`).join('')||'No trades yet - be first!';
- }catch(e){ document.getElementById('chart').innerText='Failed to load'; }
+ }catch{ document.getElementById('chart').innerText='Failed to load'; }
 }
+
+// trade
 async function exec(){
  const wallet=document.getElementById('wallet').value.trim(); const amount=parseFloat(document.getElementById('amount').value);
  if(!/^0x[a-fA-F0-9]{40}$/.test(wallet)){document.getElementById('msg').innerText='Invalid address';return;}
  if(!amount||amount<=0){document.getElementById('msg').innerText='Invalid amount';return;}
- document.getElementById('msg').innerText='Processing trade...';
+ document.getElementById('msg').innerText='Processing...';
  try{
   const res=await fetch('/api/trader/trade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet,amount,side})});
-  const d=await res.json(); if(d.success){document.getElementById('msg').innerText=`${side.toUpperCase()} Success • ${amount} NGN @ $${d.price.toFixed(6)} • New price $${d.newPrice.toFixed(6)}`; load();} else {document.getElementById('msg').innerText=d.error;}
+  const d=await res.json(); 
+  if(d.success){document.getElementById('msg').innerText=`${side.toUpperCase()} ${amount} NGN @ $${d.newPrice.toFixed(6)} • Bal ${Number(d.newBalance).toLocaleString()}`; load();}
+  else {document.getElementById('msg').innerText=d.error;}
  }catch{ document.getElementById('msg').innerText='Network error'; }
 }
 load(); setInterval(load,5000);
