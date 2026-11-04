@@ -4,37 +4,36 @@
 <meta name="theme-color" content="#00c076"/>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NGN Chain 777 - Mine & Build</title>
+<title>NGN Chain 777</title>
 <style>
 :root{--bg:#0a0a0a;--card:#111;--border:#1f1f1f;--muted:#888;--text:#fff;--green:#00c076}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .wrap{width:100%;max-width:480px}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--green),#009624);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:white}
-.brand h1{font-size:22px;letter-spacing:-0.5px;font-weight:700}
-.brand span{font-size:12px;color:var(--muted);display:block;margin-top:2px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px;background:#111;border:1px solid var(--border);border-radius:16px;padding:16px}
+.logo-icon{width:44px;height:44px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white}
+.brand h1{font-size:22px;font-weight:800}
+.brand span{font-size:12px;color:var(--muted);display:block;margin-top:4px}
+.card{background:transparent;border:0;padding:0}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
-.stat{background:#0f0f0f;border:1px solid var(--border);border-radius:12px;padding:11px}
-.stat label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-.stat b{font-size:13px;font-weight:600}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1;padding:10px;border:1px solid var(--border);background:#0f0f0f;border-radius:10px;color:#888;text-align:center;font-size:12px;font-weight:600;cursor:pointer}
-.tab.active{background:#fff;color:#000;border-color:#fff}
-.label{font-size:13px;color:var(--muted);margin:0 0 8px 2px}
-.input{width:100%;padding:14px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;color:#fff;font-size:14px;outline:none}
-.input:focus{border-color:#333}
-.btn{width:100%;margin-top:12px;padding:14px;background:#fff;color:#000;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}
-.btn.green{background:var(--green);color:#fff}
+.stat{background:#111;border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.stat label{display:block;font-size:11px;color:var(--muted);margin-bottom:8px}
+.stat b{font-size:14px;font-weight:700}
+.stat .online{color:var(--green)}
+.tabs{display:flex;gap:0;margin-bottom:18px;background:#111;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:#666;background:transparent;border:0}
+.tab.active{background:#0f0f0f;color:#fff;border-bottom:2px solid var(--green)}
+.label{font-size:13px;color:var(--text);margin:0 0 10px 2px;font-weight:500}
+.input{width:100%;padding:14px;background:#111;border:1px solid var(--border);border-radius:12px;color:#fff;font-size:14px;outline:none}
+.btn{width:100%;margin-top:12px;padding:14px;background:var(--green);color:#000;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}
 .btn:disabled{opacity:.5}
-.note{margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.4;min-height:18px;word-break:break-all}
-.links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.links a{text-align:center;padding:12px;background:#0f0f0f;border:1px solid var(--border);border-radius:12px;color:#ccc;text-decoration:none;font-size:13px;font-weight:500}
-.links a:hover{background:#151515;color:#fff}
-.links a.mine{background:linear-gradient(135deg,#00c07622,#00c07611);border-color:#00c07644;color:#00c076}
-.footer{margin-top:16px;text-align:center;font-size:11px;color:#555}
-.badge{display:inline-block;background:#00c07620;color:#00c076;border:1px solid #00c07640;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:6px}
+.note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.4;min-height:18px;word-break:break-all}
+.tools-label{font-size:13px;color:var(--muted);margin:18px 0 10px 2px}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.links a{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px;background:#111;border:1px solid var(--border);border-radius:14px;color:#ccc;text-decoration:none;font-size:13px;font-weight:500}
+.links a.mine{background:#00c07622;border-color:#00c07644;color:#fff}
+.links a span.icon{font-size:22px}
+.footer{margin-top:18px;text-align:center;font-size:11px;color:#555}
 </style>
 </head>
 <body>
@@ -42,53 +41,45 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
   <div class="brand">
     <div class="logo-icon">₦</div>
     <div>
-      <h1>NGN Chain 777 <span class="badge">MINING LIVE</span></h1>
+      <h1>NGN Chain 777</h1>
       <span>EVM • Chain ID 777 • PoW + Faucet</span>
     </div>
   </div>
-
   <div class="card">
     <div class="stats">
-      <div class="stat"><label>Network</label><b id="net">Checking</b></div>
-      <div class="stat"><label>Block Height</label><b id="block">—</b></div>
-      <div class="stat"><label>Reward</label><b id="reward">50 NGN</b></div>
+      <div class="stat"><label>Network Active</label><b class="online">● Online</b></div>
+      <div class="stat"><label>Block</label><b id="block">—</b></div>
+      <div class="stat"><label>Reward</label><b>50 NGN</b></div>
     </div>
-
     <div class="tabs">
-      <div class="tab active" id="tabFaucet" onclick="switchTab('faucet')">Faucet (Test)</div>
-      <div class="tab" id="tabMine" onclick="switchTab('mine')">Mine (Main)</div>
+      <div class="tab active" id="tabFaucet" onclick="switchTab('faucet')">Faucet</div>
+      <div class="tab" id="tabMine" onclick="switchTab('mine')">Miner</div>
     </div>
-
     <div id="faucetBox">
-      <div class="label">Wallet address for 100 NGN free</div>
-      <input id="addr" class="input" placeholder="0x..." autocomplete="off" spellcheck="false" />
+      <div class="label">Claim from Faucet</div>
+      <input id="addr" class="input" placeholder="0x... wallet address" />
       <button id="claimBtn" class="btn" onclick="claim()">Claim 100 NGN</button>
     </div>
-
     <div id="mineBox" style="display:none">
-      <div class="label">Mine directly from browser (phone friendly)</div>
-      <input id="minerAddr" class="input" placeholder="0x... your mining wallet" autocomplete="off" />
-      <button id="mineBtn" class="btn green" onclick="goMiner()">⛏️ Open Miner App</button>
-      <div style="font-size:11px;color:#666;margin-top:8px">Difficulty: <span id="diff">4</span> zeros • ~30 sec per block on phone • 50 NGN per block</div>
+      <div class="label">Miner address</div>
+      <input id="minerAddr" class="input" placeholder="0x... your mining wallet" />
+      <button id="mineBtn" class="btn" onclick="goMiner()">Open Miner App</button>
+      <div style="font-size:11px;color:#666;margin-top:8px">Difficulty: <span id="diff">4</span> • 50 NGN per block</div>
     </div>
-
     <div id="msg" class="note"></div>
-
+    <div class="tools-label">Tools</div>
     <div class="links">
-      <a href="/miner" class="mine">⛏️ Miner App</a>
-      <a href="/explorer">Explorer</a>
-      <a href="/studio">Studio</a>
-      <a href="/trader">Trader</a>
+      <a href="/miner" class="mine"><span class="icon">⛏️</span>Miner App</a>
+      <a href="/explorer"><span class="icon">🌐</span>Explorer</a>
+      <a href="/studio"><span class="icon">&lt;/&gt;</span>Studio</a>
+      <a href="/trader"><span class="icon">📊</span>Trader</a>
     </div>
   </div>
-  <div class="footer">ngn-chain.onrender.com • RPC: https://ngn-chain.onrender.com • Chain ID 777</div>
+  <div class="footer">ngn-chain.onrender.com • Chain ID 777</div>
 </div>
-
 <script>
 const $ = (id) => document.getElementById(id);
-let mode='faucet';
 function switchTab(m){
-  mode=m;
   $('tabFaucet').classList.toggle('active', m==='faucet');
   $('tabMine').classList.toggle('active', m==='mine');
   $('faucetBox').style.display = m==='faucet' ? 'block' : 'none';
@@ -96,16 +87,9 @@ function switchTab(m){
 }
 async function loadStats(){
   try{
-    const res = await fetch('/api/stats');
-    const data = await res.json();
-    $('net').innerText = data.mining ? 'Mining + Faucet' : 'Operational';
+    const res = await fetch('/api/stats'); const data = await res.json();
     $('block').innerText = data.blockNumber ?? '—';
     if(data.difficulty) $('diff').innerText = data.difficulty;
-  }catch{ $('net').innerText = 'Offline'; }
-  try{
-    const d = await fetch('/api/difficulty').then(r=>r.json());
-    $('reward').innerText = d.reward || '50 NGN';
-    $('diff').innerText = d.difficulty || '4';
   }catch{}
 }
 async function claim(){
@@ -116,18 +100,16 @@ async function claim(){
   try{
     const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
     const data = await res.json();
-    if(data.success){ msg.innerText = `✅ Faucet Success • ${data.txHash} • Balance: ${data.newBalance}`; loadStats(); }else{ msg.innerText = data.error || 'Request failed'; }
+    if(data.success){ msg.innerText = `Success • ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Failed'; }
   }catch{ msg.innerText = 'Network error'; }
   finally{ btn.disabled = false; btn.innerText = 'Claim 100 NGN'; }
 }
 function goMiner(){
   const a=$('minerAddr').value.trim();
-  if(a && !/^0x[a-fA-F0-9]{40}$/.test(a)) { $('msg').innerText='Invalid miner address'; return; }
-  const url = a ? `/miner?addr=${a}` : '/miner';
-  window.location.href=url;
+  if(a && !/^0x[a-fA-F0-9]{40}$/.test(a)) { $('msg').innerText='Invalid address'; return; }
+  window.location.href = a ? `/miner?addr=${a}` : '/miner';
 }
-loadStats();
-setInterval(loadStats, 10000);
+loadStats(); setInterval(loadStats, 10000);
 </script>
 </body>
 </html>
