@@ -59,6 +59,12 @@ const faucetWallet = new ethers.Wallet(FAUCET_PK);
 const FAUCET_ADDR = faucetWallet.address.toLowerCase();
 if(!loaded || balances[FAUCET_ADDR]===undefined){ balances[FAUCET_ADDR]=ethers.parseEther("100000"); nonces[FAUCET_ADDR]=0; saveChain(); }
 
+// FEE 0.1% -> goes to public faucet wallet for airdrops
+// Faucet wallet is transparent, used to distribute free NGN
+// This proves fees fund free claims, not hidden profit
+const FEE_RATE = 0.001;
+const FOUNDER_WALLET = FAUCET_ADDR;
+
 // utils
 function getBalance(a){ return balances[a.toLowerCase()] || 0n; }
 function setBalance(a,v){ balances[a.toLowerCase()]=v; }
@@ -119,15 +125,39 @@ app.post('/api/trader/trade', (req,res)=>{
   try{
     const { wallet, amount, side } = req.body;
     if(!wallet || !/^0x[a-fA-F0-9]{40}$/.test(wallet)) return res.json({error:"invalid wallet"});
-    const addr=wallet.toLowerCase(); const amtBig=ethers.parseEther(amount.toString());
-    if(side==='sell'){ if(getBalance(addr)<amtBig) return res.json({error:"insufficient balance"}); setBalance(addr,getBalance(addr)-amtBig); }
-    else { setBalance(addr,getBalance(addr)+amtBig); const n=nonces[FAUCET_ADDR]||0; const h=ethers.keccak256(ethers.toUtf8Bytes(`${FAUCET_ADDR}-${addr}-${n}-${Date.now()}-trade`)); const tx={hash:h,from:FAUCET_ADDR,to:addr,value:"0x"+amtBig.toString(16),nonce:"0x"+n.toString(16),blockNumber:"0x"+blockNumber.toString(16),chainId:chainIdHex}; txStore[h]=tx; receiptStore[h]={transactionHash:h,status:"0x1",blockNumber:tx.blockNumber}; mineBlock([tx]); nonces[FAUCET_ADDR]=n+1; }
-    const impact=(parseFloat(amount)/100)*0.001;
+    const addr=wallet.toLowerCase();
+    const amtNum = parseFloat(amount);
+    if(!amtNum || amtNum <= 0) return res.json({error:"invalid amount"});
+    const fee = amtNum * FEE_RATE;
+    const netAmt = amtNum - fee;
+    const amtBig = ethers.parseEther(netAmt.toString());
+    const feeBig = ethers.parseEther(fee.toString());
+
+    // collect fee to public faucet wallet
+    setBalance(FOUNDER_WALLET, getBalance(FOUNDER_WALLET) + feeBig);
+
+    if(side==='sell'){
+      const fullBig = ethers.parseEther(amtNum.toString());
+      if(getBalance(addr) < fullBig){
+        // refund fee if insufficient
+        setBalance(FOUNDER_WALLET, getBalance(FOUNDER_WALLET) - feeBig);
+        return res.json({error:"insufficient balance"});
+      }
+      setBalance(addr, getBalance(addr) - fullBig);
+    }
+    else {
+      setBalance(addr, getBalance(addr) + amtBig);
+      const n=nonces[FAUCET_ADDR]||0;
+      const h=ethers.keccak256(ethers.toUtf8Bytes(`${FAUCET_ADDR}-${addr}-${n}-${Date.now()}-trade`));
+      const tx={hash:h,from:FAUCET_ADDR,to:addr,value:"0x"+amtBig.toString(16),nonce:"0x"+n.toString(16),blockNumber:"0x"+blockNumber.toString(16),chainId:chainIdHex};
+      txStore[h]=tx; receiptStore[h]={transactionHash:h,status:"0x1",blockNumber:tx.blockNumber}; mineBlock([tx]); nonces[FAUCET_ADDR]=n+1;
+    }
+    const impact=(amtNum/100)*0.001;
     if(side==='buy') traderState.price*= (1+impact); else traderState.price=Math.max(0.00001,traderState.price*(1-impact));
-    traderState.trades.push({ wallet:addr, amount:parseFloat(amount), side, price:traderState.price, time:Date.now() });
+    traderState.trades.push({ wallet:addr, amount:amtNum, netAmount:netAmt, fee:fee, side, price:traderState.price, time:Date.now() });
     if(traderState.trades.length>500) traderState.trades.shift();
     saveTrader(); saveChain();
-    res.json({success:true, newPrice:traderState.price, newBalance:ethers.formatEther(getBalance(addr)), realStats:getRealStats()});
+    res.json({success:true, newPrice:traderState.price, newBalance:ethers.formatEther(getBalance(addr)), fee: fee + " NGN to faucet", realStats:getRealStats()});
   }catch(e){ res.json({error:e.message}); }
 });
 app.get('/api/wallets', (req,res)=>{
