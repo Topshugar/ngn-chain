@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain Whitepaper — A Global Blockchain for Borderless Value</title>
+<meta name="description" content="NGN Chain Whitepaper. Global EVM-compatible PoW blockchain. Max supply 10 Billion NGN. Free-floating price decided by market."/>
+<style>
+:root{--bg:#070707;--card:#111;--border:#1f1f1f;--muted:#9a9a9a;--text:#fff;--green:#00c076}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.7}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.logo{display:flex;gap:10px;align-items:center;text-decoration:none;color:#fff}
+.logo-icon{width:40px;height:40px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000}
+.logo b{font-size:17px}.logo span{display:block;font-size:11px;color:var(--muted)}
+.back{font-size:12px;color:#ccc;border:1px solid #222;padding:8px 12px;border-radius:20px;text-decoration:none}
+.hero{background:linear-gradient(180deg,#0f2a20,#111);border:1px solid #222;border-radius:20px;padding:26px;text-align:center}
+.hero .pill{font-size:11px;background:#1a1a1a;border:1px solid #222;padding:6px 10px;border-radius:20px;color:#ccc}
+.hero h1{font-size:30px;line-height:1.15;margin:12px 0}
+.hero h1 em{color:var(--green);font-style:normal}
+.hero p{color:var(--muted);font-size:14px}
+.meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.meta span{font-size:11px;background:#1a1a1a;border:1px solid #222;padding:5px 10px;border-radius:20px;color:#aaa}
+.btn{display:block;text-align:center;background:var(--green);color:#000;padding:15px;border-radius:14px;font-weight:800;text-decoration:none;margin-top:16px}
+.card{background:#111;border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:16px}
+.card h2{font-size:18px;margin-bottom:10px}
+.card h3{font-size:14px;margin:16px 0 6px;color:#00e68c}
+.card p{font-size:13.5px;color:#ccc;margin-bottom:10px}
+.card ul{padding-left:18px}
+.card li{font-size:13.5px;color:#ccc;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+td{padding:9px 6px;border-bottom:1px solid #1f1f1f;color:#ccc}
+td:last-child{text-align:right;color:#fff;font-weight:700}
+.toc a{display:block;padding:10px 0;border-bottom:1px solid #1f1f1f;color:#ccc;text-decoration:none;font-size:13px}
+.toc a span{color:var(--green);font-weight:800;margin-right:8px}
+.callout{background:#00c07622;border:1px solid #00c07644;border-radius:12px;padding:14px;font-size:12.5px;color:#ddd;margin-top:12px}
+.warn{background:#2a1a00;border:1px solid #4a2f00;border-radius:12px;padding:14px;font-size:12.5px;color:#e8c88a;margin-top:12px}
+.footer{margin-top:24px;text-align:center;font-size:11px;color:#555;line-height:1.6}
+.footer a{color:#888}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a href="/" class="logo"><div class="logo-icon">₦</div><div><b>NGN Chain</b><span>Chain ID 777 • Global</span></div></a>
+    <a href="/" class="back">← Back to Home</a>
+  </div>
+
+  <div class="hero">
+    <div class="pill">WHITEPAPER • VERSION 1.0 • 2026</div>
+    <h1>NGN Chain<br><em>Borderless Value<br>For The World.</em></h1>
+    <p>A global, EVM-compatible, community-mined blockchain. Fast. Open. Permissionless. No banks. No borders. No permission needed.</p>
+    <div class="meta"><span>Chain ID 777</span><span>EVM</span><span>PoW</span><span>Max Supply 10B NGN</span><span>Free Float</span></div>
+    <a href="/wallet" class="btn">🪙 Create NGN Wallet — Start Now</a>
+  </div>
+
+  <div class="card toc">
+    <h2>📄 Contents</h2>
+    <a href="#1"><span>01</span> Abstract</a>
+    <a href="#2"><span>02</span> Vision & Mission</a>
+    <a href="#3"><span>03</span> The Problem</a>
+    <a href="#4"><span>04</span> The Solution</a>
+    <a href="#5"><span>05</span> How NGN Chain Works</a>
+    <a href="#6"><span>06</span> NGN Tokenomics</a>
+    <a href="#7"><span>07</span> Mining & Faucet</a>
+    <a href="#8"><span>08</span> Wallet & Security</a>
+    <a href="#9"><span>09</span> Ecosystem</a>
+    <a href="#10"><span>10</span> Roadmap</a>
+    <a href="#11"><span>11</span> Risks & Disclaimer</a>
+  </div>
+
+  <div class="card" id="1">
+    <h2>01 — Abstract</h2>
+    <p>NGN Chain is a public, EVM-compatible blockchain designed for global, borderless value transfer.</p>
+    <p>Anyone, anywhere can create a non-custodial wallet in seconds, receive NGN from the faucet, mine NGN by securing the network, send NGN to anyone in seconds, and build decentralized applications using standard Ethereum tools.</p>
+    <p>NGN Chain has a fixed maximum supply of <b style="color:#fff">10,000,000,000 NGN</b>. New NGN is created only through mining. There is no pre-mine sale, no fixed price, and no peg. The price of NGN is free-floating and decided entirely by the market.</p>
+    <div class="callout"><b>One line summary:</b> NGN Chain = Global money rails, owned by its community, not by any bank or government.</div>
+  </div>
+
+  <div class="card" id="2">
+    <h2>02 — Vision & Mission</h2>
+    <h3>Vision</h3>
+    <p>A world where anyone can send and receive value as easily as sending a message — instant, cheap, and without permission.</p>
+    <h3>Mission</h3>
+    <p>To provide a simple, open, and secure blockchain that the whole world can use — from first-time users in Lagos to developers in London, traders in Dubai, and builders in New York.</p>
+    <p><b style="color:#fff">NGN Chain is not just for Nigeria.</b> The name NGN reflects its origin. The mission is global.</p>
+  </div>
+
+  <div class="card" id="3">
+    <h2>03 — The Problem</h2>
+    <ul>
+      <li><b style="color:#fff">Slow & expensive transfers:</b> International transfers still take days and cost 5-10% in fees.</li>
+      <li><b style="color:#fff">Excluded people:</b> Over 1.4 billion people have no bank account, but most have a phone.</li>
+      <li><b style="color:#fff">Too complex:</b> Most blockchains require MetaMask, gas knowledge, and technical setup. Ordinary people get left out.</li>
+      <li><b style="color:#fff">Centralized control:</b> Many “crypto” projects are controlled by a small team that can freeze, mint, or change rules.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="4">
+    <h2>04 — The Solution: NGN Chain</h2>
+    <p>NGN Chain solves this with 4 principles:</p>
+    <ul>
+      <li><b style="color:#fff">1. Simple:</b> Built-in NGN Wallet. No MetaMask needed. Create wallet in 10 seconds.</li>
+      <li><b style="color:#fff">2. Open:</b> Anyone can mine, transact, and build. No approval, no KYC to use the chain.</li>
+      <li><b style="color:#fff">3. EVM-Compatible:</b> Developers can use Solidity, Hardhat, Remix, and standard Ethereum tooling.</li>
+      <li><b style="color:#fff">4. Transparent:</b> Fixed supply, public explorer, public rules. No hidden minting.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="5">
+    <h2>05 — How NGN Chain Works</h2>
+    <h3>Network</h3>
+    <p>NGN Chain is an EVM-compatible Proof-of-Work (PoW) blockchain. Chain ID is 777. Blocks are produced by miners who solve cryptographic puzzles. Each valid block adds transactions to the chain and rewards the miner.</p>
+    <h3>Transactions</h3>
+    <p>Users sign transactions with their private key in NGN Wallet. Transactions are broadcast to the network, included in a block by a miner, and confirmed by the network. Explorer shows all blocks and transactions publicly.</p>
+    <h3>Smart Contracts</h3>
+    <p>Because NGN Chain is EVM-compatible, developers can deploy standard Solidity smart contracts for tokens, DeFi, NFTs, payments, and more via NGN Studio.</p>
+  </div>
+
+  <div class="card" id="6">
+    <h2>06 — NGN Tokenomics — Official</h2>
+    <p>The rules are fixed and public. No team can change them in secret.</p>
+    <table>
+      <tr><td>Token Name</td><td>NGN Chain</td></tr>
+      <tr><td>Symbol</td><td>NGN</td></tr>
+      <tr><td>Chain ID</td><td>777</td></tr>
+      <tr><td>Decimals</td><td>18</td></tr>
+      <tr><td>Consensus</td><td>Proof of Work (PoW)</td></tr>
+      <tr><td>Block Reward</td><td>50 NGN</td></tr>
+      <tr><td>Max Supply</td><td>10,000,000,000 NGN</td></tr>
+      <tr><td>Faucet</td><td>100 NGN / 24h / address</td></tr>
+      <tr><td>Price Model</td><td>Free Float — Market Decides</td></tr>
+    </table>
+    <h3>Supply Logic</h3>
+    <p>Max supply is capped at 10 Billion NGN. New NGN enters circulation only via block rewards (50 NGN per block). Once max supply is reached, no new NGN can be created.</p>
+    <h3>Price — Free Float</h3>
+    <p>NGN has <b style="color:#fff">no fixed price, no peg to Naira, Dollar, or any fiat, and no price guarantee</b>. Price is determined solely by supply and demand on open markets where NGN is traded. NGN Chain does not control, set, or guarantee price.</p>
+    <div class="callout"><b>Distribution:</b> NGN is distributed via mining and faucet — not via an ICO or private sale. This keeps distribution community-driven and transparent.</div>
+  </div>
+
+  <div class="card" id="7">
+    <h2>07 — Mining & Faucet</h2>
+    <h3>Mining</h3>
+    <p>Anyone can mine NGN using NGN Miner App. Miners compete to solve the block puzzle. The first miner to solve it earns 50 NGN and the block is added to the chain. Mining secures the network and distributes NGN fairly.</p>
+    <h3>Faucet</h3>
+    <p>The Faucet gives new users 100 NGN per 24 hours per address to try the network, test sending, and start trading. The Faucet is for onboarding and testing — it is not a source of income and is rate-limited to prevent abuse.</p>
+  </div>
+
+  <div class="card" id="8">
+    <h2>08 — Wallet & Security</h2>
+    <p>NGN Wallet is <b style="color:#fff">non-custodial</b>. You control your keys. NGN Chain never holds, sees, or can recover your funds.</p>
+    <ul>
+      <li>Your wallet is created from a 12-word seed phrase (BIP-39 standard).</li>
+      <li>Your private key never leaves your device.</li>
+      <li>If you lose your 12 words, your wallet cannot be recovered by anyone — including NGN Chain.</li>
+      <li>Never share your seed phrase. NGN Chain team will NEVER ask for it.</li>
+      <li>Always verify you are on <b style="color:#fff">ngn-chain.onrender.com</b> before entering your seed phrase.</li>
+    </ul>
+    <div class="warn"><b>⚠️ Security Warning:</b> Anyone who asks for your seed phrase is trying to steal your funds. No support agent, no admin, no website will ever need it. Keep it on paper, offline, in a safe place.</div>
+  </div>
+
+  <div class="card" id="9">
+    <h2>09 — Ecosystem</h2>
+    <ul>
+      <li><b style="color:#fff">🪙 NGN Wallet:</b> Create, import, send, receive, backup.</li>
+      <li><b style="color:#fff">⛏️ NGN Miner:</b> Mine blocks, earn 50 NGN per block.</li>
+      <li><b style="color:#fff">🌐 NGN Explorer:</b> View blocks, transactions, balances — fully transparent.</li>
+      <li><b style="color:#fff">📊 NGN Trader:</b> Trade NGN with other users. Price is market-driven.</li>
+      <li><b style="color:#fff">&lt;/&gt; NGN Studio:</b> Build and deploy EVM smart contracts.</li>
+      <li><b style="color:#fff">🚰 NGN Faucet:</b> 100 NGN onboarding for new users.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="10">
+    <h2>10 — Roadmap</h2>
+    <h3>Phase 1 — Live ✅</h3>
+    <p>Chain, Wallet, Miner, Faucet, Explorer, Trader, Studio</p>
+    <h3>Phase 2 — In Progress</h3>
+    <p>Whitepaper (this document), Public Docs, Community, Wallet Security Review</p>
+    <h3>Phase 3 — Growth</h3>
+    <p>Mobile Wallet App, Exchange Listings, Merchant Payment Tools, Smart Contract Templates</p>
+    <h3>Phase 4 — Scale</h3>
+    <p>Decentralized Validators, Cross-Chain Bridges, Global Partnerships</p>
+    <p style="font-size:12px;color:#888">Roadmap is directional, not a promise of dates or returns. Priorities may change based on community feedback and security.</p>
+  </div>
+
+  <div class="card" id="11">
+    <h2>11 — Risks & Disclaimer</h2>
+    <p>Please read carefully. By using NGN Chain you accept these risks:</p>
+    <ul>
+      <li><b style="color:#fff">Not legal tender:</b> NGN is not legal tender, not a stablecoin, and not a bank deposit.</li>
+      <li><b style="color:#fff">Volatile price:</b> NGN price is free-floating and can go up or down sharply. You can lose value.</li>
+      <li><b style="color:#fff">No guarantee:</b> NGN Chain does not guarantee price, profit, return, or listing.</li>
+      <li><b style="color:#fff">Early stage:</b> NGN Chain is in early public phase. It has not yet had a formal third-party security audit.</li>
+      <li><b style="color:#fff">Self-custody risk:</b> If you lose your seed phrase, you lose your funds permanently.</li>
+      <li><b style="color:#fff">Regulatory risk:</b> Laws on digital assets vary by country. You are responsible for complying with your local laws.</li>
+    </ul>
+    <p style="font-size:12px;color:#888">This whitepaper is for information only. It is not investment advice, financial advice, or an offer to sell securities. Do your own research. Never invest more than you can afford to lose.</p>
+  </div>
+
+  <a href="/wallet" class="btn">🪙 Create Your NGN Wallet Now</a>
+  <a href="/" class="btn" style="background:#1a1a1a;color:#ccc;border:1px solid #222">← Back to Homepage</a>
+
+  <div class="footer">
+    <b style="color:#888">NGN Chain • Chain ID 777 • Whitepaper v1.0 • 2026</b><br>
+    ngn-chain.onrender.com<br><br>
+    © 2026 NGN Chain. All Rights Reserved.<br>
+    NGN is a decentralized digital asset. Not legal tender. Not a stablecoin. Not an investment product. Price is free-floating.
+  </div>
+</div>
+</body>
+</html>
