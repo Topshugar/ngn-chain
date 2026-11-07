@@ -1,7 +1,7 @@
 # NGN Chain 777 — The Mobile Chain
 **Built in Lagos, for builders without laptops.**
 
-> **LIVE:** Block #8 | 2026-11-07 | 1 USD ≈ **1348.11 NGN** | Faucet Bank: 538T NGN | Auto-Updated
+> **LIVE:** Block #1 | 2026-11-07 | 1 USD ≈ **1348.11 NGN** | Faucet Bank: 538T NGN | Auto-Updated
 
 Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RPC: https://ngn-chain.onrender.com
 
@@ -17,6 +17,7 @@ Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RP
 - https://ngn-chain.onrender.com/studio
 - https://ngn-chain.onrender.com/trader
 - https://ngn-chain.onrender.com/wallet
+- https://ngn-chain.onrender.com/whitepaper
 
 ### Live FX Rate (CBN)
 - **1 USD ≈ 1348.11 NGN** — Updated: 2026-11-07
@@ -74,7 +75,7 @@ POST /compile Body: { "source": "pragma solidity..." }
 
 **Stats**
 GET /health → { status, chainId, uptime }
-GET /api/stats → { blockNumber: 8, genesisAccounts: 10, faucetBankBalanceNGN: "538T" }
+GET /api/stats → { blockNumber: 1, genesisAccounts: 10, faucetBankBalanceNGN: "538T" }
 
 ### Local Development
 ```bash
@@ -109,11 +110,11 @@ CORS enabled for wallet browsers
 No private keys stored server-side — all wallet generation client-side
 
 ### Stats (Live)
-- **Current Block:** #8
+- **Current Block:** #1
 - **Faucet Bank:** 538T NGN
 - **Genesis Accounts:** 10
 - **Live CBN Rate:** 1 USD ≈ 1348.11 NGN on 2026-11-07
 
 License: MIT — Built in Lagos, Open for Everyone.
 
-**Made with ❤️ in Lagos — Chain 777 — Block #8 — 1348.11 NGN/USD — 2026-11-07**
+**Made with ❤️ in Lagos — Chain 777 — Block #1 — 1348.11 NGN/USD — 2026-11-07**
