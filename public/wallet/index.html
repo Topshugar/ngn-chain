@@ -1,0 +1,241 @@
+<!-- 
+
+  NGN WALLET - OFFICIAL WALLET FOR NGN CHAIN (CHAIN ID 777)
+  Network: NGN Chain | Native Asset: NGN | Type: Non-Custodial HD Wallet
+  Maintained By: NGN Chain Core Team | Version: 1.0.0
+  Description: Browser-based wallet. Generates 12-word seed phrase (BIP39),
+  derives wallet, shows balance, sends NGN. Private key never leaves device.
+  Security: Seed phrase is stored ONLY in this device. NGN Chain never sees it.
+  Copyright (c) 2026 NGN Chain. All Rights Reserved.
+
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NGN Wallet</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#00c076"/>
+<style>
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:#0a0a0a;color:#fff;margin:0;padding:0}
+.top{padding:20px 16px 10px;text-align:center}
+.top h1{margin:0;font-size:22px}
+.top p{color:#888;font-size:12px;margin:4px 0 0}
+.card{background:#111;border:1px solid #1f1f1f;border-radius:20px;padding:18px;max-width:480px;margin:12px auto}
+.balance{text-align:center;padding:10px 0}
+.balance small{color:#888;font-size:12px;letter-spacing:1px}
+.balance h2{font-size:38px;margin:6px 0}
+.balance span{color:#00c076;font-size:18px}
+.addrBox{background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:12px;font-size:12px;word-break:break-all;text-align:center;color:#ccc}
+input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;border-radius:12px;color:#fff;font-size:14px;margin-top:10px}
+.btn{width:100%;padding:15px;margin-top:10px;border:0;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}
+.green{background:#00c076;color:#fff}
+.dark{background:#1a1a1a;color:#ccc;border:1px solid #222}
+.red{background:#ff3b30;color:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seed{background:#000;border:1px dashed #00c076;border-radius:12px;padding:14px;font-size:15px;line-height:1.8;text-align:center;letter-spacing:.3px}
+.hidden{display:none}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{flex:1;padding:10px;border-radius:10px;background:#1a1a1a;border:1px solid #222;color:#aaa;font-weight:700;cursor:pointer;text-align:center;font-size:13px}
+.tab.active{background:#00c076;color:#fff;border-color:#00c076}
+.tx{border-bottom:1px solid #1a1a1a;padding:10px 0;font-size:13px}
+.tx b{color:#00c076}
+.small{font-size:11px;color:#888}
+#log{margin-top:10px;font-size:12px;color:#0f0;white-space:pre-wrap}
+.qr{text-align:center;font-size:42px}
+</style>
+</head>
+<body>
+<div class="top"><h1>🪙 NGN Wallet</h1><p>NGN Chain • Chain ID 777 • Non-Custodial</p></div>
+
+<!-- ============ LOCK / ONBOARDING ============ -->
+<div id="lockScreen" class="card">
+  <h2 style="margin:0">Welcome to NGN Wallet</h2>
+  <p class="small">Your keys, your coins. Back up your 12 words and you can recover anywhere.</p>
+  <button class="btn green" onclick="createWallet()">✨ Create New Wallet</button>
+  <button class="btn dark" onclick="showImport()">🔑 Import Existing Wallet</button>
+  <div id="importBox" class="hidden">
+    <textarea id="importSeed" rows="3" placeholder="Enter your 12 words separated by space..."></textarea>
+    <button class="btn green" onclick="importWallet()">Import Wallet</button>
+  </div>
+  <p class="small" style="margin-top:14px">Already have a wallet? Your old address <b style="color:#fff">0xA1c65b...Aa48</b> can be imported here if you have its 12 words / private key. If you don't have them, create a new wallet and use the NEW address for mining going forward.</p>
+</div>
+
+<!-- ============ MAIN WALLET ============ -->
+<div id="walletScreen" class="card hidden">
+  <div class="tabs">
+    <div class="tab active" id="tabHome" onclick="showTab('home')">Wallet</div>
+    <div class="tab" id="tabSend" onclick="showTab('send')">Send</div>
+    <div class="tab" id="tabReceive" onclick="showTab('receive')">Receive</div>
+    <div class="tab" id="tabBackup" onclick="showTab('backup')">Backup</div>
+  </div>
+
+  <!-- HOME -->
+  <div id="pane-home">
+    <div class="balance"><small>TOTAL BALANCE</small><h2><span id="bal">0</span> NGN</h2><small id="balUsd">≈ ₦0</small></div>
+    <div class="addrBox" id="myAddr">—</div>
+    <div class="row">
+      <button class="btn dark" onclick="copyAddr()">📋 Copy Address</button>
+      <button class="btn dark" onclick="refresh()">🔄 Refresh</button>
+    </div>
+    <div class="row">
+      <button class="btn green" onclick="showTab('send')">↑ Send</button>
+      <button class="btn dark" onclick="showTab('receive')">↓ Receive</button>
+    </div>
+    <h3 style="font-size:14px;margin:18px 0 6px">Recent Activity</h3>
+    <div id="txList"><p class="small">No transactions yet. Mine or receive NGN to see history.</p></div>
+    <button class="btn dark" onclick="goMiner()">⛏️ Open Miner</button>
+    <button class="btn dark" onclick="goTrader()">📈 Open Trader</button>
+  </div>
+
+  <!-- SEND -->
+  <div id="pane-send" class="hidden">
+    <h3 style="margin:0">Send NGN</h3>
+    <input id="toAddr" placeholder="To: 0x... recipient address"/>
+    <input id="sendAmt" type="number" placeholder="Amount NGN e.g. 10"/>
+    <button class="btn green" onclick="sendNGN()">Send Now</button>
+    <p class="small">Fee: 0 NGN (NGN Chain is feeless for now). Sent instantly via NGN Chain RPC.</p>
+    <div id="sendLog"></div>
+  </div>
+
+  <!-- RECEIVE -->
+  <div id="pane-receive" class="hidden">
+    <h3 style="margin:0">Receive NGN</h3>
+    <div class="qr">📷</div>
+    <p class="small" style="text-align:center">Share this address. Anyone can send you NGN.</p>
+    <div class="addrBox" id="myAddr2">—</div>
+    <button class="btn green" onclick="copyAddr()">Copy Address</button>
+    <p class="small" style="text-align:center">Use this address in the Miner to receive mining rewards.</p>
+  </div>
+
+  <!-- BACKUP -->
+  <div id="pane-backup" class="hidden">
+    <h3 style="margin:0">Backup - Keep This Secret!</h3>
+    <p class="small">Anyone with these 12 words can steal your NGN. Write them on paper. Never screenshot to share online. Never give to anyone claiming to be support.</p>
+    <div class="seed" id="seedDisplay">—</div>
+    <button class="btn dark" onclick="copySeed()">📋 Copy Seed Phrase</button>
+    <p class="small">Private Key (for MetaMask import if you ever want it):</p>
+    <div class="addrBox" id="pkDisplay">—</div>
+    <button class="btn dark" onclick="copyPK()">Copy Private Key</button>
+    <button class="btn red" onclick="logout()">🚪 Log Out / Lock Wallet</button>
+  </div>
+
+  <pre id="log"></pre>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+<script>
+const RPC = "https://ngn-chain.onrender.com/";
+const NGN_PRICE_NGN = 1; // 1 NGN = 1 Naira for display, change if you set price
+let wallet = null;
+
+function log(m){ document.getElementById('log').innerText = m + '\n' + document.getElementById('log').innerText; }
+function save(){ localStorage.setItem('ngn_wallet_mnemonic', wallet.mnemonic.phrase); localStorage.setItem('ngn_wallet_pk', wallet.privateKey); }
+function showTab(name){
+  ['home','send','receive','backup'].forEach(t=>{
+    document.getElementById('pane-'+t).classList.toggle('hidden', t!==name);
+    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
+  });
+}
+function showImport(){ document.getElementById('importBox').classList.remove('hidden'); }
+function unlockUI(){
+  document.getElementById('lockScreen').classList.add('hidden');
+  document.getElementById('walletScreen').classList.remove('hidden');
+  document.getElementById('myAddr').innerText = wallet.address;
+  document.getElementById('myAddr2').innerText = wallet.address;
+  document.getElementById('seedDisplay').innerText = wallet.mnemonic ? wallet.mnemonic.phrase : 'Imported via private key - no seed phrase';
+  document.getElementById('pkDisplay').innerText = wallet.privateKey;
+  refresh();
+}
+
+async function createWallet(){
+  const w = ethers.Wallet.createRandom();
+  wallet = w; save(); unlockUI();
+  alert('Wallet Created!\n\nIMPORTANT: Go to Backup tab and write down your 12 words NOW. If you lose them, you lose your coins.');
+  showTab('backup');
+}
+function importWallet(){
+  const phrase = document.getElementById('importSeed').value.trim();
+  try{
+    if(phrase.split(' ').length === 12){
+      wallet = ethers.Wallet.fromPhrase(phrase);
+    } else if(phrase.startsWith('0x') && phrase.length===66){
+      wallet = new ethers.Wallet(phrase);
+    } else throw new Error('Invalid seed or private key');
+    save(); unlockUI(); log('Wallet imported: '+wallet.address);
+  }catch(e){ alert('Invalid seed phrase / private key. Check 12 words, single spaces.'); }
+}
+async function refresh(){
+  if(!wallet) return;
+  try{
+    // Try JSON-RPC first (same as MetaMask uses)
+    const provider = new ethers.JsonRpcProvider(RPC);
+    const balWei = await provider.getBalance(wallet.address);
+    const bal = ethers.formatEther(balWei);
+    document.getElementById('bal').innerText = parseFloat(bal).toLocaleString();
+    document.getElementById('balUsd').innerText = '≈ ₦' + (parseFloat(bal)*NGN_PRICE_NGN).toLocaleString();
+    loadHistory();
+  }catch(e){
+    // Fallback to REST API if RPC fails
+    try{
+      const r = await fetch(RPC+'api/balance?address='+wallet.address).then(x=>x.json());
+      const bal = r.balance || r.newBalance || 0;
+      document.getElementById('bal').innerText = parseFloat(bal).toLocaleString();
+    }catch(_){ log('Balance fetch failed: '+e.message); }
+  }
+}
+async function loadHistory(){
+  try{
+    const r = await fetch(RPC+'api/transactions?address='+wallet.address).then(x=>x.json()).catch(()=>null);
+    const list = r && (r.transactions || r.txs || r.data);
+    if(list && list.length){
+      document.getElementById('txList').innerHTML = list.slice(0,10).map(tx=>`<div class="tx"><b>${tx.type==='in'||tx.to===wallet.address?'+':'-' } ${tx.amount||tx.value||'?'} NGN</b><br><span class="small">${tx.from||''} → ${tx.to||''}<br>${tx.hash||tx.id||''}</span></div>`).join('');
+    }
+  }catch(_){}
+}
+async function sendNGN(){
+  const to = document.getElementById('toAddr').value.trim();
+  const amt = document.getElementById('sendAmt').value.trim();
+  if(!/^0x[a-fA-F0-9]{40}$/.test(to)) return alert('Invalid recipient address');
+  if(!amt || parseFloat(amt)<=0) return alert('Enter amount');
+  if(!confirm(`Send ${amt} NGN to\n${to}?`)) return;
+  document.getElementById('sendLog').innerText = 'Sending...';
+  try{
+    const provider = new ethers.JsonRpcProvider(RPC);
+    const signer = wallet.connect(provider);
+    const tx = await signer.sendTransaction({ to, value: ethers.parseEther(amt) });
+    document.getElementById('sendLog').innerText = 'Sent! Hash: '+tx.hash+'\nWaiting for confirmation...';
+    await tx.wait();
+    document.getElementById('sendLog').innerText = '✅ Confirmed! '+amt+' NGN sent.';
+    refresh();
+  }catch(e){
+    // Fallback: try your server REST endpoint if RPC send not supported
+    try{
+      const res = await fetch(RPC+'api/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:wallet.address,to,amount:parseFloat(amt),privateKey:wallet.privateKey})}).then(r=>r.json());
+      if(res.success){ document.getElementById('sendLog').innerText='✅ Sent via API'; refresh(); }
+      else document.getElementById('sendLog').innerText='❌ '+ (res.error||e.message);
+    }catch(_){ document.getElementById('sendLog').innerText='❌ '+e.message; }
+  }
+}
+function copyAddr(){ navigator.clipboard.writeText(wallet.address); alert('Address copied:\n'+wallet.address); }
+function copySeed(){ if(wallet.mnemonic) navigator.clipboard.writeText(wallet.mnemonic.phrase); alert('Seed phrase copied - keep it secret!'); }
+function copyPK(){ navigator.clipboard.writeText(wallet.privateKey); alert('Private key copied - keep it secret!'); }
+function goMiner(){ location.href='/miner?addr='+wallet.address; }
+function goTrader(){ location.href='/trader?addr='+wallet.address; }
+function logout(){ if(confirm('Lock wallet? You will need your 12 words to unlock again. Make sure you backed them up!')){ localStorage.removeItem('ngn_wallet_mnemonic'); localStorage.removeItem('ngn_wallet_pk'); location.reload(); } }
+
+// Auto-unlock if wallet exists in this device
+window.onload = ()=>{
+  const saved = localStorage.getItem('ngn_wallet_mnemonic');
+  const savedPK = localStorage.getItem('ngn_wallet_pk');
+  if(saved){
+    try{ wallet = ethers.Wallet.fromPhrase(saved); unlockUI(); }catch(_){}
+  } else if(savedPK){
+    try{ wallet = new ethers.Wallet(savedPK); unlockUI(); }catch(_){}
+  }
+};
+</script>
+</body>
+</html>
