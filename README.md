@@ -16,6 +16,7 @@ Chain ID: 777 | Native Token: NGN | Block Time: ~3s | EVM: Solidity ^0.8.20 | RP
 - https://ngn-chain.onrender.com/miner
 - https://ngn-chain.onrender.com/studio
 - https://ngn-chain.onrender.com/trader
+- https://ngn-chain.onrender.com/wallet
 
 ### Live FX Rate (CBN)
 - **1 USD ≈ 1348.11 NGN** — Updated: 2026-11-07
