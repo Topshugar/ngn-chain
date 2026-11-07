@@ -1,3 +1,14 @@
+<!-- 
+
+  NGN MINER - OFFICIAL WEB MINER (NGN CHAIN - CHAIN ID 777)
+  Network: NGN Chain | Consensus: Proof-of-Work | Native Asset: NGN
+  Maintained By: NGN Chain Core Team | Version: 2.1.0 - PoW Fix
+  Description: Browser-based PoW miner. Finds valid block hash and submits
+  miner address, nonce and timestamp for on-chain validation.
+  Security: Never enter seed phrase or private key. Wallet address only.
+  Copyright (c) 2026 NGN Chain. All Rights Reserved.
+
+-->
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,7 +69,7 @@ const urlParams=new URLSearchParams(location.search);
 if(urlParams.get('addr')) document.getElementById('addr').value=urlParams.get('addr');
 
 async function getDiff(){const d=await fetch('/api/difficulty').then(r=>r.json());document.getElementById('height').innerText=d.blockHeight;document.getElementById('reward').innerText=d.reward;document.getElementById('diffBadge').innerText='DIFF '+d.difficulty;return d;}
-getDiff(); setInterval(getDiff,10000);
+getDiff(); setInterval(()=>{ if(!mining) getDiff(); },10000);
 
 function log(m){const el=document.getElementById('log');el.innerText=m+'\n'+el.innerText;}
 async function toggle(){
@@ -71,23 +82,29 @@ async function toggle(){
  let diffInfo=await getDiff();
  let nonce=0;
  while(mining){
-   const ts=Math.floor(Date.now()/1000);
-   const hash=ethers.keccak256(ethers.toUtf8Bytes(`${diffInfo.blockHeight}${diffInfo.parentHash}${nonce}${ts}`));
+   // FIXED v2.1.0: Capture the EXACT nonce + timestamp used for this hash
+   // and send those SAME values to the server. Previously nonce was
+   // incremented before sending and timestamp was not sent at all,
+   // causing 100% "Invalid PoW" rejections.
+   const currentNonce = nonce;
+   const ts = Math.floor(Date.now()/1000);
+   const hash=ethers.keccak256(ethers.toUtf8Bytes(`${diffInfo.blockHeight}${diffInfo.parentHash}${currentNonce}${ts}`));
    totalHashes++; nonce++;
    document.getElementById('hashes').innerText=totalHashes.toLocaleString();
    if(hash.startsWith('0x'+'0'.repeat(diffInfo.difficulty))){
-     log(`FOUND ${hash.slice(0,22)}... nonce=${nonce}`);
+     log(`FOUND ${hash.slice(0,22)}... nonce=${currentNonce} ts=${ts}`);
      try{
-       const res=await fetch('/api/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({miner:addr,nonce})}).then(r=>r.json());
+       // FIXED: Send miner + nonce + timestamp - must match hash exactly
+       const res=await fetch('/api/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({miner:addr,nonce:currentNonce,timestamp:ts})}).then(r=>r.json());
        if(res.success){
          log(`✅ BLOCK ${res.block.number} +${res.reward} Bal: ${res.newBalance} NGN`);
-         // haptic feedback on phone
          if(navigator.vibrate) navigator.vibrate(200);
          diffInfo=await getDiff();
          nonce=0;
        } else {
          log(`❌ ${res.error} - refreshing chain`);
          diffInfo=await getDiff();
+         nonce=0;
        }
      }catch(e){log('Network error '+e.message)}
    }
