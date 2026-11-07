@@ -1,94 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><link rel="manifest" href="/manifest.json"/>
+<head>
+<link rel="manifest" href="/manifest.json"/>
 <meta name="theme-color" content="#00c076"/>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NGN Chain 777</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NGN Chain — A Global, Community-Powered Blockchain | Chain ID 777</title>
+<meta name="description" content="NGN Chain is a global EVM-compatible blockchain. Fast, low-cost, community-mined. Native asset: NGN. Max supply 10 Billion. Price is free-floating, decided by the market."/>
 <style>
-:root{--bg:#0a0a0a;--card:#111;--border:#1f1f1f;--muted:#888;--text:#fff;--green:#00c076}
+:root{--bg:#070707;--card:#111;--border:#1f1f1f;--muted:#9a9a9a;--text:#fff;--green:#00c076;--green2:#00e68c}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.wrap{width:100%;max-width:480px}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px;background:#111;border:1px solid var(--border);border-radius:16px;padding:16px}
-.logo-icon{width:44px;height:44px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white}
-.brand h1{font-size:22px;font-weight:800}
-.brand span{font-size:12px;color:var(--muted);display:block;margin-top:4px}
-.card{background:transparent;border:0;padding:0}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.5}
+.wrap{width:100%;max-width:520px;margin:0 auto;padding:20px 16px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#000}
+.logo b{font-size:18px}
+.logo span{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.live{font-size:11px;background:#00c07622;border:1px solid #00c07644;color:#00e68c;padding:6px 10px;border-radius:20px;font-weight:700}
+.hero{background:linear-gradient(180deg,#0f2a20 0%,#111 100%);border:1px solid #1f1f1f;border-radius:20px;padding:22px;text-align:center}
+.hero h1{font-size:28px;line-height:1.15;margin:8px 0}
+.hero h1 em{color:var(--green);font-style:normal}
+.hero p{color:var(--muted);font-size:14px;max-width:420px;margin:0 auto}
+.pill{display:inline-block;font-size:11px;background:#1a1a1a;border:1px solid #222;padding:6px 10px;border-radius:20px;color:#ccc;margin-bottom:10px}
+.wallet-hero{display:block;text-align:center;background:var(--green);color:#000;padding:16px;border-radius:14px;font-weight:800;font-size:15px;text-decoration:none;margin-top:18px}
+.wallet-hero small{display:block;font-weight:500;font-size:11px;margin-top:4px;opacity:.8}
+.wallet-saved{margin-top:12px;padding:12px;background:#00c07622;border:1px solid #00c07644;border-radius:12px;font-size:12px;display:none}
+.card{background:#111;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:16px}
+.card h2{font-size:16px;margin-bottom:8px}
+.card p,.card li{font-size:13px;color:#ccc}
+.card ul{padding-left:18px;margin-top:8px}
+.card li{margin-bottom:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
 .stat{background:#111;border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
-.stat label{display:block;font-size:11px;color:var(--muted);margin-bottom:8px}
-.stat b{font-size:14px;font-weight:700}
+.stat label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+.stat b{font-size:14px}
 .stat .online{color:var(--green)}
-.tabs{display:flex;gap:0;margin-bottom:18px;background:#111;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tabs{display:flex;gap:0;margin-top:16px;background:#111;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:#666;background:transparent;border:0}
 .tab.active{background:#0f0f0f;color:#fff;border-bottom:2px solid var(--green)}
-.label{font-size:13px;color:var(--text);margin:0 0 10px 2px;font-weight:500}
-.input{width:100%;padding:14px;background:#111;border:1px solid var(--border);border-radius:12px;color:#fff;font-size:14px;outline:none}
+.label{font-size:13px;margin:0 0 10px 2px;font-weight:500}
+.input{width:100%;padding:14px;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;color:#fff;font-size:14px;outline:none;margin-top:10px}
 .btn{width:100%;margin-top:12px;padding:14px;background:var(--green);color:#000;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}
+.btn.ghost{background:#1a1a1a;color:#ccc;border:1px solid #222}
 .btn:disabled{opacity:.5}
 .note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.4;min-height:18px;word-break:break-all}
-.tools-label{font-size:13px;color:var(--muted);margin:18px 0 10px 2px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+td{padding:9px 6px;border-bottom:1px solid #1f1f1f;color:#ccc}
+td:first-child{color:#888}
+td:last-child{text-align:right;color:#fff;font-weight:700}
 .links{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .links a{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px;background:#111;border:1px solid var(--border);border-radius:14px;color:#ccc;text-decoration:none;font-size:13px;font-weight:500}
 .links a.mine{background:#00c07622;border-color:#00c07644;color:#fff}
-.links a span.icon{font-size:22px}
-.footer{margin-top:18px;text-align:center;font-size:11px;color:#555}
-.wallet-hero{display:block;text-align:center;background:var(--green);color:#000;padding:16px;border-radius:14px;font-weight:800;font-size:15px;text-decoration:none;margin-bottom:14px}
-.wallet-hero small{display:block;font-weight:500;font-size:11px;margin-top:4px;opacity:.8}
-.wallet-saved{margin-bottom:12px;padding:12px;background:#00c07622;border:1px solid #00c07644;border-radius:12px;font-size:12px;display:none}
-.wallet-saved b{color:#fff}
+.links a span{font-size:22px}
+.step{display:flex;gap:12px;margin-top:12px}
+.num{width:28px;height:28px;min-width:28px;background:var(--green);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
+.step b{font-size:13px}
+.step p{font-size:12px;color:var(--muted)}
+.faq{margin-top:10px}
+.faq details{border-bottom:1px solid #1f1f1f;padding:10px 0}
+.faq summary{font-size:13px;font-weight:700;cursor:pointer}
+.faq p{font-size:12px;color:var(--muted);margin-top:6px}
+.footer{margin-top:24px;text-align:center;font-size:11px;color:#555;line-height:1.6}
+.footer a{color:#888}
+.badge{font-size:10px;background:#1a1a1a;border:1px solid #222;padding:4px 8px;border-radius:20px;color:#aaa}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand">
-    <div class="logo-icon">₦</div>
-    <div>
-      <h1>NGN Chain 777</h1>
-      <span>EVM • Chain ID 777 • PoW + Faucet</span>
-    </div>
+
+  <div class="topbar">
+    <div class="logo"><div class="logo-icon">₦</div><div><b>NGN Chain</b><span>EVM • Chain ID 777 • Global</span></div></div>
+    <div class="live">● LIVE</div>
   </div>
 
-  <!-- ===== NGN WALLET HERO BUTTON - ADDED ===== -->
-  <a href="/wallet" class="wallet-hero">🪙 Open NGN Wallet<small>Create • Import • Send • Backup - No MetaMask Needed</small></a>
-  <div id="walletSaved" class="wallet-saved">✅ Your NGN Wallet: <b id="savedAddr">—</b><br><span style="color:#888">Tap Wallet to view balance. Use this address for Faucet & Miner below.</span></div>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="pill">🌍 Built for the World • Open • Community-Mined</div>
+    <h1>Money that moves<br>at the speed of <em>the internet.</em></h1>
+    <p>NGN Chain is a global, EVM-compatible blockchain. Anyone, anywhere can create a wallet, mine NGN, send value in seconds, and build on top — without banks, borders, or permission.</p>
+    <a href="/wallet" class="wallet-hero">🪙 Open NGN Wallet<small>Create • Import • Send • Backup — No MetaMask Needed</small></a>
+    <div id="walletSaved" class="wallet-saved">✅ Your NGN Wallet: <b id="savedAddr">—</b><br><span style="color:#888">Use this address for Faucet & Miner below.</span></div>
+    <div style="margin-top:12px"><span class="badge">Chain ID 777</span> <span class="badge">EVM Compatible</span> <span class="badge">PoW</span> <span class="badge">Max Supply 10B NGN</span></div>
+  </div>
 
+  <!-- LIVE STATS -->
+  <div class="stats">
+    <div class="stat"><label>Network</label><b class="online">● Online</b></div>
+    <div class="stat"><label>Block</label><b id="block">—</b></div>
+    <div class="stat"><label>Block Reward</label><b>50 NGN</b></div>
+  </div>
+
+  <!-- GET STARTED -->
   <div class="card">
-    <div class="stats">
-      <div class="stat"><label>Network Active</label><b class="online">● Online</b></div>
-      <div class="stat"><label>Block</label><b id="block">—</b></div>
-      <div class="stat"><label>Reward</label><b>50 NGN</b></div>
-    </div>
+    <h2>🚀 Get Started in 3 Steps</h2>
+    <div class="step"><div class="num">1</div><div><b>Create NGN Wallet</b><p>Get your 12-word seed phrase. Write it on paper. This is your backup — NGN Chain can never recover it for you.</p></div></div>
+    <div class="step"><div class="num">2</div><div><b>Claim from Faucet or Mine</b><p>New users claim 100 NGN from the Faucet. Miners earn 50 NGN per block by securing the network.</p></div></div>
+    <div class="step"><div class="num">3</div><div><b>Send, Trade & Build</b><p>Send NGN to anyone in seconds. Trade on NGN Trader. Build dApps on NGN Chain with standard EVM tools.</p></div></div>
     <div class="tabs">
       <div class="tab active" id="tabFaucet" onclick="switchTab('faucet')">Faucet</div>
       <div class="tab" id="tabMine" onclick="switchTab('mine')">Miner</div>
     </div>
     <div id="faucetBox">
-      <div class="label">Claim from Faucet</div>
-      <input id="addr" class="input" placeholder="0x... wallet address" />
+      <div class="label">Claim 100 NGN from Faucet</div>
+      <input id="addr" class="input" placeholder="0x... your NGN Wallet address"/>
       <button id="claimBtn" class="btn" onclick="claim()">Claim 100 NGN</button>
-      <button class="btn" style="background:#1a1a1a;color:#ccc;border:1px solid #222" onclick="location.href='/wallet'">🪙 Don't have a wallet? Create NGN Wallet</button>
+      <button class="btn ghost" onclick="location.href='/wallet'">🪙 Don't have a wallet? Create NGN Wallet</button>
+      <div style="font-size:11px;color:#666;margin-top:8px">Limit: 1 claim per address per 24 hours. Faucet is for testing & onboarding.</div>
     </div>
     <div id="mineBox" style="display:none">
-      <div class="label">Miner address</div>
-      <input id="minerAddr" class="input" placeholder="0x... your mining wallet" />
-      <button id="mineBtn" class="btn" onclick="goMiner()">Open Miner App</button>
-      <div style="font-size:11px;color:#666;margin-top:8px">Difficulty: <span id="diff">4</span> • 50 NGN per block</div>
+      <div class="label">Miner Address</div>
+      <input id="minerAddr" class="input" placeholder="0x... your NGN Wallet address"/>
+      <button class="btn" onclick="goMiner()">Open Miner App ⛏️</button>
+      <div style="font-size:11px;color:#666;margin-top:8px">Difficulty: <span id="diff">—</span> • Reward: 50 NGN per block • Your wallet: <span id="minerAddrHint">—</span></div>
     </div>
     <div id="msg" class="note"></div>
-    <div class="tools-label">Tools</div>
-    <div class="links">
-      <a href="/wallet" class="mine"><span class="icon">🪙</span>NGN Wallet</a>
-      <a href="/miner" class="mine"><span class="icon">⛏️</span>Miner App</a>
-      <a href="/explorer"><span class="icon">🌐</span>Explorer</a>
-      <a href="/studio"><span class="icon">&lt;/&gt;</span>Studio</a>
-      <a href="/trader"><span class="icon">📊</span>Trader</a>
-      <a href="/faucet"><span class="icon">🚰</span>Faucet</a>
+  </div>
+
+  <!-- WHAT IS NGN CHAIN -->
+  <div class="card">
+    <h2>🌍 What is NGN Chain?</h2>
+    <p>NGN Chain is a public, permissionless blockchain. It is <b style="color:#fff">not just for Nigeria</b> — NGN is a global asset for anyone who wants fast, low-cost, borderless value transfer.</p>
+    <ul>
+      <li><b style="color:#fff">Global from day one:</b> Anyone in any country can join, mine, and transact.</li>
+      <li><b style="color:#fff">EVM-compatible:</b> Works with standard Ethereum tools, wallets, and smart contracts.</li>
+      <li><b style="color:#fff">Community-mined:</b> New NGN is created only by miners securing the network. No pre-mine sale.</li>
+      <li><b style="color:#fff">Non-custodial:</b> You hold your own keys. NGN Chain never holds or controls your funds.</li>
+    </ul>
+  </div>
+
+  <!-- TOKENOMICS - ACCURATE -->
+  <div class="card">
+    <h2>📊 NGN Tokenomics — Official</h2>
+    <p>Transparent, fixed rules. No hidden minting.</p>
+    <table>
+      <tr><td>Token Name</td><td>NGN Chain</td></tr>
+      <tr><td>Symbol</td><td>NGN</td></tr>
+      <tr><td>Chain ID</td><td>777</td></tr>
+      <tr><td>Decimals</td><td>18</td></tr>
+      <tr><td>Consensus</td><td>Proof of Work (PoW)</td></tr>
+      <tr><td>Block Reward</td><td>50 NGN</td></tr>
+      <tr><td>Max Supply</td><td>10,000,000,000 NGN</td></tr>
+      <tr><td>Faucet</td><td>100 NGN / 24h</td></tr>
+      <tr><td>Price</td><td>Free Float — Market Decides</td></tr>
+    </table>
+    <p style="margin-top:10px;font-size:12px;color:#888">Price Disclaimer: NGN has no fixed peg to the Naira, Dollar, or any fiat currency. Its price is free-floating and determined solely by supply and demand on open markets. NGN Chain does not guarantee any price or return.</p>
+  </div>
+
+  <!-- TOOLS -->
+  <div class="card">
+    <h2>🧰 Ecosystem Tools</h2>
+    <div class="links" style="margin-top:10px">
+      <a href="/wallet" class="mine"><span>🪙</span>NGN Wallet</a>
+      <a href="/miner" class="mine"><span>⛏️</span>Miner App</a>
+      <a href="/explorer"><span>🌐</span>Explorer</a>
+      <a href="/trader"><span>📊</span>Trader</a>
+      <a href="/studio"><span>&lt;/&gt;</span>Studio</a>
+      <a href="/whitepaper"><span>📄</span>Whitepaper</a>
     </div>
   </div>
-  <div class="footer">ngn-chain.onrender.com • Chain ID 777</div>
+
+  <!-- ROADMAP -->
+  <div class="card">
+    <h2>🗺️ Roadmap</h2>
+    <ul>
+      <li><b style="color:#fff">Phase 1 — Live ✅</b> Chain, Wallet, Miner, Faucet, Explorer, Trader</li>
+      <li><b style="color:#fff">Phase 2 — In Progress</b> Whitepaper, Public Docs, Community, Security Audit of Wallet</li>
+      <li><b style="color:#fff">Phase 3 — Growth</b> Mobile Wallet App, Token Listings, Merchant Tools, EVM Smart Contracts</li>
+      <li><b style="color:#fff">Phase 4 — Scale</b> Validator Decentralization, Cross-Chain Bridges, Global Partnerships</li>
+    </ul>
+  </div>
+
+  <!-- FAQ -->
+  <div class="card faq">
+    <h2>❓ Frequently Asked Questions</h2>
+    <details><summary>Is NGN only for Nigerians?</summary><p>No. NGN Chain is global. The name NGN comes from its origin, but anyone in the world can use, mine, and build on it.</p></details>
+    <details><summary>What is the total supply?</summary><p>Max supply is 10,000,000,000 NGN (10 Billion). New NGN is only created via mining rewards of 50 NGN per block until max supply is reached.</p></details>
+    <details><summary>What is the price of NGN?</summary><p>NGN is free-floating. There is no fixed price, no peg, and no guarantee. The market decides based on supply and demand.</p></details>
+    <details><summary>Do I need MetaMask?</summary><p>No. NGN Wallet is built-in. You can create a wallet in 10 seconds with a 12-word backup. MetaMask is optional for advanced users.</p></details>
+    <details><summary>What if I lose my 12 words?</summary><p>Your wallet cannot be recovered by anyone, including NGN Chain. Keep your seed phrase on paper in a safe place. Never share it with anyone.</p></details>
+    <details><summary>Is NGN Chain audited?</summary><p>NGN Chain is currently in public test / early mainnet phase. Use with amounts you can afford to lose. A formal security audit is part of Phase 2.</p></details>
+  </div>
+
+  <div class="footer">
+    <b style="color:#888">NGN Chain • Chain ID 777 • ngn-chain.onrender.com</b><br>
+    <a href="/wallet">Wallet</a> • <a href="/miner">Miner</a> • <a href="/explorer">Explorer</a> • <a href="/trader">Trader</a> • <a href="/whitepaper">Whitepaper</a><br><br>
+    <span>Disclaimer: NGN is a decentralized digital asset. It is not legal tender, not a stablecoin, and not an investment product. Price is free-floating and volatile. Never share your seed phrase. NGN Chain is not a bank and does not hold user funds. Use at your own risk.</span><br><br>
+    © 2026 NGN Chain. All Rights Reserved.
+  </div>
 </div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 function switchTab(m){
@@ -112,7 +213,7 @@ async function claim(){
   try{
     const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
     const data = await res.json();
-    if(data.success){ msg.innerText = `Success • ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Failed'; }
+    if(data.success){ msg.innerText = `✅ Success • ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Failed'; }
   }catch{ msg.innerText = 'Network error'; }
   finally{ btn.disabled = false; btn.innerText = 'Claim 100 NGN'; }
 }
@@ -121,13 +222,12 @@ function goMiner(){
   if(a && !/^0x[a-fA-F0-9]{40}$/.test(a)) { $('msg').innerText='Invalid address'; return; }
   window.location.href = a ? `/miner?addr=${a}` : '/miner';
 }
-// Auto-fill from NGN Wallet if user already created one
 try{
-  const pk = localStorage.getItem('ngn_wallet_pk');
   const saved = localStorage.getItem('ngn_wallet_address');
   if(saved){
     $('walletSaved').style.display='block';
     $('savedAddr').innerText = saved;
+    $('minerAddrHint').innerText = saved.slice(0,6)+'...'+saved.slice(-4);
     if(!$('addr').value) $('addr').value = saved;
     if(!$('minerAddr').value) $('minerAddr').value = saved;
   }
