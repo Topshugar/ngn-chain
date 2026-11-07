@@ -34,6 +34,10 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
 .links a.mine{background:#00c07622;border-color:#00c07644;color:#fff}
 .links a span.icon{font-size:22px}
 .footer{margin-top:18px;text-align:center;font-size:11px;color:#555}
+.wallet-hero{display:block;text-align:center;background:var(--green);color:#000;padding:16px;border-radius:14px;font-weight:800;font-size:15px;text-decoration:none;margin-bottom:14px}
+.wallet-hero small{display:block;font-weight:500;font-size:11px;margin-top:4px;opacity:.8}
+.wallet-saved{margin-bottom:12px;padding:12px;background:#00c07622;border:1px solid #00c07644;border-radius:12px;font-size:12px;display:none}
+.wallet-saved b{color:#fff}
 </style>
 </head>
 <body>
@@ -45,6 +49,11 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
       <span>EVM • Chain ID 777 • PoW + Faucet</span>
     </div>
   </div>
+
+  <!-- ===== NGN WALLET HERO BUTTON - ADDED ===== -->
+  <a href="/wallet" class="wallet-hero">🪙 Open NGN Wallet<small>Create • Import • Send • Backup - No MetaMask Needed</small></a>
+  <div id="walletSaved" class="wallet-saved">✅ Your NGN Wallet: <b id="savedAddr">—</b><br><span style="color:#888">Tap Wallet to view balance. Use this address for Faucet & Miner below.</span></div>
+
   <div class="card">
     <div class="stats">
       <div class="stat"><label>Network Active</label><b class="online">● Online</b></div>
@@ -59,6 +68,7 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
       <div class="label">Claim from Faucet</div>
       <input id="addr" class="input" placeholder="0x... wallet address" />
       <button id="claimBtn" class="btn" onclick="claim()">Claim 100 NGN</button>
+      <button class="btn" style="background:#1a1a1a;color:#ccc;border:1px solid #222" onclick="location.href='/wallet'">🪙 Don't have a wallet? Create NGN Wallet</button>
     </div>
     <div id="mineBox" style="display:none">
       <div class="label">Miner address</div>
@@ -69,10 +79,12 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-ser
     <div id="msg" class="note"></div>
     <div class="tools-label">Tools</div>
     <div class="links">
+      <a href="/wallet" class="mine"><span class="icon">🪙</span>NGN Wallet</a>
       <a href="/miner" class="mine"><span class="icon">⛏️</span>Miner App</a>
       <a href="/explorer"><span class="icon">🌐</span>Explorer</a>
       <a href="/studio"><span class="icon">&lt;/&gt;</span>Studio</a>
       <a href="/trader"><span class="icon">📊</span>Trader</a>
+      <a href="/faucet"><span class="icon">🚰</span>Faucet</a>
     </div>
   </div>
   <div class="footer">ngn-chain.onrender.com • Chain ID 777</div>
@@ -109,6 +121,17 @@ function goMiner(){
   if(a && !/^0x[a-fA-F0-9]{40}$/.test(a)) { $('msg').innerText='Invalid address'; return; }
   window.location.href = a ? `/miner?addr=${a}` : '/miner';
 }
+// Auto-fill from NGN Wallet if user already created one
+try{
+  const pk = localStorage.getItem('ngn_wallet_pk');
+  const saved = localStorage.getItem('ngn_wallet_address');
+  if(saved){
+    $('walletSaved').style.display='block';
+    $('savedAddr').innerText = saved;
+    if(!$('addr').value) $('addr').value = saved;
+    if(!$('minerAddr').value) $('minerAddr').value = saved;
+  }
+}catch{}
 loadStats(); setInterval(loadStats, 10000);
 </script>
 </body>
