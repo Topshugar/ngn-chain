@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ *  NGN CHAIN - OFFICIAL NODE SERVER (CHAIN ID 777)
+ *  Network: NGN Chain | Native Asset: NGN | Consensus: Proof-of-Work
+ *  Maintained By: NGN Chain Core Team | Version: 2.1.0 - PoW Fix
+ *  Description: Lightweight EVM-compatible chain with integrated
+ *  Miner, Trader, Faucet, Explorer and Smart Contract Verification.
+ *  Security: Fees fund public faucet for transparent community distribution.
+ *  Copyright (c) 2026 NGN Chain. All Rights Reserved.
+ * ============================================================================
+ */
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -102,17 +114,37 @@ app.get('/miner', (req,res)=> res.sendFile(path.join(__dirname,'public','miner',
 // api
 app.get('/health', (req,res)=>{ const s=getRealStats(); res.json({ status:'alive', chainId:CHAIN_ID, blockHeight:blockNumber, faucet:faucetWallet.address, faucetBalance:ethers.formatEther(getBalance(FAUCET_ADDR)), traderPrice:traderState.price, realStats:s }); });
 app.get('/api/stats', (req,res)=>{ const s=getRealStats(); res.json({ blockNumber, chainId:CHAIN_ID, difficulty, faucetBalance:ethers.formatEther(getBalance(FAUCET_ADDR)), traderPrice:traderState.price, ...s }); });
-app.get('/api/difficulty', (req,res)=>{ const p=blocks[blocks.length-1]; res.json({ difficulty, blockHeight:blockNumber, parentHash:p.hash, reward:getRewardForHeight(blockNumber), targetPrefix:"0".repeat(difficulty) }); });
+app.get('/api/difficulty', (req,res)=>{ const p=blocks[blocks.length-1]; res.json({ difficulty, blockHeight:blockNumber, parentHash:p.hash, reward:getRewardForHeight(blockNumber), targetPrefix:"0".repeat(difficulty), serverTime: Math.floor(Date.now()/1000) }); });
+
+// ============================================================================
+//  FIXED: /api/mine - PoW Validation (v2.1.0)
+//  Previous Bug: Server generated a new timestamp on validation, so the
+//  recomputed hash never matched the miner's hash -> "Invalid PoW" always.
+//  Fix: Server now validates using the miner-supplied timestamp.
+//  The miner must send { miner, nonce, timestamp } where timestamp is the
+//  exact timestamp used during hashing. Timestamp must be within 5 mins.
+// ============================================================================
 app.post('/api/mine', (req,res)=>{
   try{
-    const { miner, nonce } = req.body;
+    const { miner, nonce, timestamp } = req.body;
     if(!miner || !/^0x[a-fA-F0-9]{40}$/.test(miner)) return res.status(400).json({error:"invalid miner"});
-    const p=blocks[blocks.length-1]; const ts=Math.floor(Date.now()/1000); const hash=hashBlockForMining(blockNumber,p.hash,nonce,ts);
-    if(!hash.startsWith("0x"+"0".repeat(difficulty))) return res.status(400).json({error:"Invalid PoW", hash});
+    if(nonce === undefined || nonce === null || isNaN(Number(nonce))) return res.status(400).json({error:"invalid nonce"});
+    if(timestamp === undefined || timestamp === null || isNaN(Number(timestamp))) return res.status(400).json({error:"missing timestamp - please update miner frontend to send timestamp"});
+
+    const p=blocks[blocks.length-1];
+    const ts = parseInt(timestamp);
+    const now = Math.floor(Date.now()/1000);
+
+    // Prevent replay / stale blocks - 5 minute window
+    if(Math.abs(now - ts) > 300) return res.status(400).json({error:"timestamp too old, refresh chain", serverTime: now});
+
+    // CRITICAL FIX: Use miner's timestamp, NOT Date.now()
+    const hash=hashBlockForMining(blockNumber,p.hash,nonce,ts);
+    if(!hash.startsWith("0x"+"0".repeat(difficulty))) return res.status(400).json({error:"Invalid PoW", hash, expectedPrefix: "0x"+"0".repeat(difficulty)});
     if(blocks.find(b=>b.hash===hash)) return res.status(400).json({error:"Block already mined"});
     const rStr=getRewardForHeight(blockNumber); const r=ethers.parseEther(rStr);
     setBalance(miner.toLowerCase(), getBalance(miner.toLowerCase())+r);
-    const b={ number:blockNumber, hash, parentHash:p.hash, timestamp:ts, nonce, miner:miner.toLowerCase(), transactions:[], reward:`${rStr} NGN`, gasLimit:"0x1c9c380", gasUsed:"0x0" };
+    const b={ number:blockNumber, hash, parentHash:p.hash, timestamp:ts, nonce: Number(nonce), miner:miner.toLowerCase(), transactions:[], reward:`${rStr} NGN`, gasLimit:"0x1c9c380", gasUsed:"0x0" };
     blocks.push(b); blockNumber++; saveChain();
     res.json({success:true, block:b, reward:`${rStr} NGN`, newBalance:ethers.formatEther(getBalance(miner.toLowerCase())), hash, realStats:getRealStats()});
   }catch(e){ res.status(500).json({error:e.message}); }
@@ -198,7 +230,7 @@ app.post('/', (req,res)=>{
     if(method==='eth_getTransactionByHash') return res.json({jsonrpc:"2.0",id,result:txStore[params[0]]||null});
     if(method==='eth_getTransactionReceipt') return res.json({jsonrpc:"2.0",id,result:receiptStore[params[0]]||null});
     if(method==='eth_getBlockByNumber'){ const num=params[0]==='latest'?blocks.length-1:parseInt(params[0],16); const b=blocks[num]; if(!b) return res.json({jsonrpc:"2.0",id,result:null}); return res.json({jsonrpc:"2.0",id,result:{...b,number:"0x"+b.number.toString(16),timestamp:"0x"+b.timestamp.toString(16)}}); }
-    if(method==='eth_sendTransaction'){ const [txReq]=params; const from=(txReq.from||FAUCET_ADDR).toLowerCase(); const to=txReq.to.toLowerCase(); const v=BigInt(txReq.value||0); if(getBalance(from)<v) return res.json({jsonrpc:"2.0",id,error:{code:-32000,message:"insufficient funds"}}); const nonce=nonces[from]||0; const hash=ethers.keccak256(ethers.toUtf8Bytes(`${from}-${to}-${nonce}-${Date.now()}`)); const tx={hash,from,to,value:"0x"+v.toString(16),nonce:"0x"+nonce.toString(16),blockNumber:"0x"+blockNumber.toString(16)}; setBalance(from,getBalance(from)-v); setBalance(to,getBalance(to)+v); nonces[from]=nonce+1; txStore[hash]=tx; receiptStore[hash]={transactionHash:hash,status:"0x1",blockNumber:tx.blockNumber}; mineBlock([tx]); return res.json({jsonrpc:"2.0",id,result:hash}); }
+    if(method==='eth_sendTransaction'){ const [txReq]=params; const from=(txReq.from||FAUCET_ADDR).toLowerCase(); const to=txReq.to.toLowerCase(); const v=BigInt(txReq.value||0); if(getBalance(from)<v) return res.json({jsonrpc:"2.0",id,error:{code:-32000,message:"insufficient funds"}}); const nonce=nonces[from]||0; const hash=ethers.keccak256(ethers.toUtf8Bytes(`${from}-${to}-${nonce}-${Date.now()}`)); const tx={hash,from,to,value:"0x"+nonce.toString(16),blockNumber:"0x"+blockNumber.toString(16)}; setBalance(from,getBalance(from)-v); setBalance(to,getBalance(to)+v); nonces[from]=nonce+1; txStore[hash]=tx; receiptStore[hash]={transactionHash:hash,status:"0x1",blockNumber:tx.blockNumber}; mineBlock([tx]); return res.json({jsonrpc:"2.0",id,result:hash}); }
     return res.json({jsonrpc:"2.0",id,result:"0x0"});
   }catch(e){ res.json({jsonrpc:"2.0",id,error:{code:-32603,message:e.message}}); }
 });
