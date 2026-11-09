@@ -1,13 +1,11 @@
 <!-- 
-
   NGN WALLET - OFFICIAL WALLET FOR NGN CHAIN (CHAIN ID 777)
   Network: NGN Chain | Native Asset: NGN | Type: Non-Custodial HD Wallet
-  Maintained By: NGN Chain Core Team | Version: 1.0.0
-  Description: Browser-based wallet. Generates 12-word seed phrase (BIP39),
-  derives wallet, shows balance, sends NGN. Private key never leaves device.
-  Security: Seed phrase is stored ONLY in this device. NGN Chain never sees it.
+  Maintained By: NGN Chain Core Team | Version: 2.0.0 - Accurate & Synced
+  Single Truth: localStorage key 'ngn_wallet_address' is shared with Miner + Homepage
+  Balance: Real from server /api/wallets + RPC eth_getBalance
+  Security: Seed phrase stored ONLY on this device. Private key NEVER sent to server.
   Copyright (c) 2026 NGN Chain. All Rights Reserved.
-
 -->
 <!DOCTYPE html>
 <html>
@@ -45,6 +43,7 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
 .small{font-size:11px;color:#888}
 #log{margin-top:10px;font-size:12px;color:#0f0;white-space:pre-wrap}
 .qr{text-align:center;font-size:42px}
+.live-dot{color:#00c076}
 </style>
 </head>
 <body>
@@ -60,7 +59,8 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
     <textarea id="importSeed" rows="3" placeholder="Enter your 12 words separated by space..."></textarea>
     <button class="btn green" onclick="importWallet()">Import Wallet</button>
   </div>
-  <p class="small" style="margin-top:14px">Already have a wallet? Your old address <b style="color:#fff">0xA1c65b...Aa48</b> can be imported here if you have its 12 words / private key. If you don't have them, create a new wallet and use the NEW address for mining going forward.</p>
+  <p class="small" style="margin-top:14px">Already mined to an address? Import its 12 words here. Your mined balance will appear automatically because Wallet, Miner and Homepage now share the same address.</p>
+  <p class="small" style="color:#00c076">✅ Balance is real - fetched live from NGN Chain server (Chain ID 777).</p>
 </div>
 
 <!-- ============ MAIN WALLET ============ -->
@@ -74,7 +74,7 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
 
   <!-- HOME -->
   <div id="pane-home">
-    <div class="balance"><small>TOTAL BALANCE</small><h2><span id="bal">0</span> NGN</h2><small id="balUsd">≈ ₦0</small></div>
+    <div class="balance"><small>TOTAL BALANCE • <span class="live-dot">● LIVE FROM CHAIN</span></small><h2><span id="bal">0</span> NGN</h2><small id="balUsd">≈ $0.0000 • Free Float Price</small></div>
     <div class="addrBox" id="myAddr">—</div>
     <div class="row">
       <button class="btn dark" onclick="copyAddr()">📋 Copy Address</button>
@@ -85,9 +85,10 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
       <button class="btn dark" onclick="showTab('receive')">↓ Receive</button>
     </div>
     <h3 style="font-size:14px;margin:18px 0 6px">Recent Activity</h3>
-    <div id="txList"><p class="small">No transactions yet. Mine or receive NGN to see history.</p></div>
-    <button class="btn dark" onclick="goMiner()">⛏️ Open Miner</button>
+    <div id="txList"><p class="small">Loading from chain...</p></div>
+    <button class="btn dark" onclick="goMiner()">⛏️ Open Miner - Same Address</button>
     <button class="btn dark" onclick="goTrader()">📈 Open Trader</button>
+    <p class="small" style="text-align:center;margin-top:10px">Miner rewards go directly to this address. No import needed if you mine with this address.</p>
   </div>
 
   <!-- SEND -->
@@ -96,7 +97,7 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
     <input id="toAddr" placeholder="To: 0x... recipient address"/>
     <input id="sendAmt" type="number" placeholder="Amount NGN e.g. 10"/>
     <button class="btn green" onclick="sendNGN()">Send Now</button>
-    <p class="small">Fee: 0 NGN (NGN Chain is feeless for now). Sent instantly via NGN Chain RPC.</p>
+    <p class="small">Sent via NGN Chain RPC (Chain ID 777). Your private key never leaves this device.</p>
     <div id="sendLog"></div>
   </div>
 
@@ -107,7 +108,7 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
     <p class="small" style="text-align:center">Share this address. Anyone can send you NGN.</p>
     <div class="addrBox" id="myAddr2">—</div>
     <button class="btn green" onclick="copyAddr()">Copy Address</button>
-    <p class="small" style="text-align:center">Use this address in the Miner to receive mining rewards.</p>
+    <p class="small" style="text-align:center">Use this address in the Miner to receive mining rewards. Same address = same balance everywhere.</p>
   </div>
 
   <!-- BACKUP -->
@@ -127,12 +128,18 @@ input,textarea{width:100%;padding:14px;background:#0a0a0a;border:1px solid #222;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
 <script>
-const RPC = "https://ngn-chain.onrender.com/";
-const NGN_PRICE_NGN = 1; // 1 NGN = 1 Naira for display, change if you set price
+const RPC = window.location.origin + "/";
 let wallet = null;
+let livePrice = 0.0001;
 
 function log(m){ document.getElementById('log').innerText = m + '\n' + document.getElementById('log').innerText; }
-function save(){ localStorage.setItem('ngn_wallet_mnemonic', wallet.mnemonic.phrase); localStorage.setItem('ngn_wallet_pk', wallet.privateKey); }
+function save(){
+  // FIXED v2.0: Save to ONE shared key used by Miner + Homepage + Wallet
+  localStorage.setItem('ngn_wallet_mnemonic', wallet.mnemonic.phrase);
+  localStorage.setItem('ngn_wallet_pk', wallet.privateKey);
+  localStorage.setItem('ngn_wallet_address', wallet.address); // <-- THE FIX
+  localStorage.setItem('miner_address', wallet.address);
+}
 function showTab(name){
   ['home','send','receive','backup'].forEach(t=>{
     document.getElementById('pane-'+t).classList.toggle('hidden', t!==name);
@@ -149,11 +156,10 @@ function unlockUI(){
   document.getElementById('pkDisplay').innerText = wallet.privateKey;
   refresh();
 }
-
 async function createWallet(){
   const w = ethers.Wallet.createRandom();
   wallet = w; save(); unlockUI();
-  alert('Wallet Created!\n\nIMPORTANT: Go to Backup tab and write down your 12 words NOW. If you lose them, you lose your coins.');
+  alert('Wallet Created!\n\nAddress: '+w.address+'\n\nIMPORTANT: Go to Backup tab and write down your 12 words NOW. If you lose them, you lose your coins. Miner will use THIS address automatically.');
   showTab('backup');
 }
 function importWallet(){
@@ -164,43 +170,58 @@ function importWallet(){
     } else if(phrase.startsWith('0x') && phrase.length===66){
       wallet = new ethers.Wallet(phrase);
     } else throw new Error('Invalid seed or private key');
-    save(); unlockUI(); log('Wallet imported: '+wallet.address);
+    save(); unlockUI(); log('Wallet imported: '+wallet.address+' - Balance will load from chain');
   }catch(e){ alert('Invalid seed phrase / private key. Check 12 words, single spaces.'); }
 }
+// REAL BALANCE - v2.0: Uses /api/wallets (exists) + RPC fallback. No fake /api/balance
 async function refresh(){
   if(!wallet) return;
   try{
-    // Try JSON-RPC first (same as MetaMask uses)
+    // Get live price first
+    try{
+      const pr = await fetch('/api/trader/price').then(r=>r.json());
+      if(pr.price) livePrice = pr.price;
+    }catch{}
+    // Method 1: /api/wallets - REAL, exists on server
+    const r = await fetch('/api/wallets').then(x=>x.json());
+    const found = r.wallets.find(w=>w.address.toLowerCase()===wallet.address.toLowerCase());
+    if(found){
+      const bal = parseFloat(found.balance);
+      document.getElementById('bal').innerText = bal.toLocaleString(undefined,{maximumFractionDigits:2});
+      document.getElementById('balUsd').innerText = '≈ $' + (bal*livePrice).toFixed(4) + ' • Price Free Float $' + livePrice.toFixed(6);
+      loadHistory(bal);
+      return;
+    }
+    // Method 2: RPC eth_getBalance
     const provider = new ethers.JsonRpcProvider(RPC);
     const balWei = await provider.getBalance(wallet.address);
-    const bal = ethers.formatEther(balWei);
-    document.getElementById('bal').innerText = parseFloat(bal).toLocaleString();
-    document.getElementById('balUsd').innerText = '≈ ₦' + (parseFloat(bal)*NGN_PRICE_NGN).toLocaleString();
-    loadHistory();
+    const bal = parseFloat(ethers.formatEther(balWei));
+    document.getElementById('bal').innerText = bal.toLocaleString(undefined,{maximumFractionDigits:2});
+    document.getElementById('balUsd').innerText = '≈ $' + (bal*livePrice).toFixed(4) + ' • Price Free Float $' + livePrice.toFixed(6);
+    loadHistory(bal);
   }catch(e){
-    // Fallback to REST API if RPC fails
-    try{
-      const r = await fetch(RPC+'api/balance?address='+wallet.address).then(x=>x.json());
-      const bal = r.balance || r.newBalance || 0;
-      document.getElementById('bal').innerText = parseFloat(bal).toLocaleString();
-    }catch(_){ log('Balance fetch failed: '+e.message); }
+    log('Balance fetch failed: '+e.message+' - Retrying...');
   }
 }
-async function loadHistory(){
-  try{
-    const r = await fetch(RPC+'api/transactions?address='+wallet.address).then(x=>x.json()).catch(()=>null);
-    const list = r && (r.transactions || r.txs || r.data);
-    if(list && list.length){
-      document.getElementById('txList').innerHTML = list.slice(0,10).map(tx=>`<div class="tx"><b>${tx.type==='in'||tx.to===wallet.address?'+':'-' } ${tx.amount||tx.value||'?'} NGN</b><br><span class="small">${tx.from||''} → ${tx.to||''}<br>${tx.hash||tx.id||''}</span></div>`).join('');
-    }
-  }catch(_){}
+async function loadHistory(bal){
+  const el = document.getElementById('txList');
+  if(bal > 0){
+    el.innerHTML = `<div class="tx"><b>+ ${bal.toFixed(2)} NGN Balance on Chain</b><br><span class="small">Address: ${wallet.address}<br>Verified live from NGN Chain server • Block: <span id="histBlock">—</span></span></div><p class="small">Mining rewards and faucet claims appear here as balance. Full transaction history coming in next update.</p>`;
+    try{
+      const s = await fetch('/api/stats').then(r=>r.json());
+      const hb = document.getElementById('histBlock');
+      if(hb) hb.innerText = s.blockNumber;
+    }catch{}
+  } else {
+    el.innerHTML = `<p class="small">No balance yet. Mine with this address in Miner, or claim from Faucet, and it will appear here in seconds. Your address: ${wallet.address}</p>`;
+  }
 }
 async function sendNGN(){
   const to = document.getElementById('toAddr').value.trim();
   const amt = document.getElementById('sendAmt').value.trim();
   if(!/^0x[a-fA-F0-9]{40}$/.test(to)) return alert('Invalid recipient address');
   if(!amt || parseFloat(amt)<=0) return alert('Enter amount');
-  if(!confirm(`Send ${amt} NGN to\n${to}?`)) return;
+  if(!confirm(`Send ${amt} NGN to\n${to}?\n\nYour private key stays on your device.`)) return;
   document.getElementById('sendLog').innerText = 'Sending...';
   try{
     const provider = new ethers.JsonRpcProvider(RPC);
@@ -211,12 +232,7 @@ async function sendNGN(){
     document.getElementById('sendLog').innerText = '✅ Confirmed! '+amt+' NGN sent.';
     refresh();
   }catch(e){
-    // Fallback: try your server REST endpoint if RPC send not supported
-    try{
-      const res = await fetch(RPC+'api/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:wallet.address,to,amount:parseFloat(amt),privateKey:wallet.privateKey})}).then(r=>r.json());
-      if(res.success){ document.getElementById('sendLog').innerText='✅ Sent via API'; refresh(); }
-      else document.getElementById('sendLog').innerText='❌ '+ (res.error||e.message);
-    }catch(_){ document.getElementById('sendLog').innerText='❌ '+e.message; }
+    document.getElementById('sendLog').innerText='❌ '+e.message;
   }
 }
 function copyAddr(){ navigator.clipboard.writeText(wallet.address); alert('Address copied:\n'+wallet.address); }
@@ -224,17 +240,23 @@ function copySeed(){ if(wallet.mnemonic) navigator.clipboard.writeText(wallet.mn
 function copyPK(){ navigator.clipboard.writeText(wallet.privateKey); alert('Private key copied - keep it secret!'); }
 function goMiner(){ location.href='/miner?addr='+wallet.address; }
 function goTrader(){ location.href='/trader?addr='+wallet.address; }
-function logout(){ if(confirm('Lock wallet? You will need your 12 words to unlock again. Make sure you backed them up!')){ localStorage.removeItem('ngn_wallet_mnemonic'); localStorage.removeItem('ngn_wallet_pk'); location.reload(); } }
+function logout(){ if(confirm('Lock wallet? You will need your 12 words to unlock again. Make sure you backed them up!')){ localStorage.removeItem('ngn_wallet_mnemonic'); localStorage.removeItem('ngn_wallet_pk'); localStorage.removeItem('ngn_wallet_address'); localStorage.removeItem('miner_address'); location.reload(); } }
 
-// Auto-unlock if wallet exists in this device
+// Auto-unlock + AUTO-SYNC: If Miner/Homepage already set an address, use it
 window.onload = ()=>{
   const saved = localStorage.getItem('ngn_wallet_mnemonic');
   const savedPK = localStorage.getItem('ngn_wallet_pk');
+  // If URL has ?addr= from Miner, use that address hint
+  const urlAddr = new URLSearchParams(location.search).get('addr');
   if(saved){
     try{ wallet = ethers.Wallet.fromPhrase(saved); unlockUI(); }catch(_){}
   } else if(savedPK){
     try{ wallet = new ethers.Wallet(savedPK); unlockUI(); }catch(_){}
+  } else if(urlAddr && /^0x[a-fA-F0-9]{40}$/.test(urlAddr)){
+    document.getElementById('lockScreen').querySelector('p').innerText = 'Miner is using address: ' + urlAddr + ' - Import its 12 words to see its balance here.';
   }
+  // Auto-refresh every 5 seconds so mining shows live without manual refresh
+  setInterval(()=>{ if(wallet) refresh(); }, 5000);
 };
 </script>
 </body>
