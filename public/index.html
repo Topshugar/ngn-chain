@@ -36,6 +36,7 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
 .stat label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
 .stat b{font-size:14px}
 .stat .online{color:var(--green)}
+.stat small{display:block;font-size:10px;color:#666;margin-top:4px}
 .tabs{display:flex;gap:0;margin-top:16px;background:#111;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;color:#666;background:transparent;border:0}
 .tab.active{background:#0f0f0f;color:#fff;border-bottom:2px solid var(--green)}
@@ -64,6 +65,7 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
 .footer{margin-top:24px;text-align:center;font-size:11px;color:#555;line-height:1.6}
 .footer a{color:#888}
 .badge{font-size:10px;background:#1a1a1a;border:1px solid #222;padding:4px 8px;border-radius:20px;color:#aaa}
+.trust{margin-top:12px;font-size:11px;color:#888;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
@@ -82,20 +84,26 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
     <a href="/wallet" class="wallet-hero">🪙 Open NGN Wallet<small>Create • Import • Send • Backup — No MetaMask Needed</small></a>
     <div id="walletSaved" class="wallet-saved">✅ Your NGN Wallet: <b id="savedAddr">—</b><br><span style="color:#888">Use this address for Faucet & Miner below.</span></div>
     <div style="margin-top:12px"><span class="badge">Chain ID 777</span> <span class="badge">EVM Compatible</span> <span class="badge">PoW</span> <span class="badge">Max Supply 10B NGN</span></div>
+    <div class="trust">✅ No Pre-mine Sale • ✅ Max Supply Fixed at 10B • ✅ Price is Free Float — Market Decides</div>
   </div>
 
-  <!-- LIVE STATS -->
+  <!-- LIVE STATS - REAL DATA FROM SERVER -->
   <div class="stats">
-    <div class="stat"><label>Network</label><b class="online">● Online</b></div>
-    <div class="stat"><label>Block</label><b id="block">—</b></div>
-    <div class="stat"><label>Block Reward</label><b>50 NGN</b></div>
+    <div class="stat"><label>Network</label><b class="online">● Online</b><small id="blockLabel">Block —</small></div>
+    <div class="stat"><label>Circulating</label><b id="circ">—</b><small>NGN in circulation</small></div>
+    <div class="stat"><label>Block Reward</label><b>50 NGN</b><small>Halves at 100k blocks</small></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><label>Holders</label><b id="holders">—</b><small>Wallets with NGN</small></div>
+    <div class="stat"><label>Market Price</label><b id="price">—</b><small>Free Float</small></div>
+    <div class="stat"><label>Faucet Balance</label><b id="faucetBal">—</b><small id="faucetStatus">Live</small></div>
   </div>
 
   <!-- GET STARTED -->
   <div class="card">
     <h2>🚀 Get Started in 3 Steps</h2>
     <div class="step"><div class="num">1</div><div><b>Create NGN Wallet</b><p>Get your 12-word seed phrase. Write it on paper. This is your backup — NGN Chain can never recover it for you.</p></div></div>
-    <div class="step"><div class="num">2</div><div><b>Claim from Faucet or Mine</b><p>New users claim 100 NGN from the Faucet. Miners earn 50 NGN per block by securing the network.</p></div></div>
+    <div class="step"><div class="num">2</div><div><b>Claim from Faucet or Mine</b><p>New users claim 100 NGN from the Faucet every 6 hours. Miners earn 50 NGN per block by securing the network.</p></div></div>
     <div class="step"><div class="num">3</div><div><b>Send, Trade & Build</b><p>Send NGN to anyone in seconds. Trade on NGN Trader. Build dApps on NGN Chain with standard EVM tools.</p></div></div>
     <div class="tabs">
       <div class="tab active" id="tabFaucet" onclick="switchTab('faucet')">Faucet</div>
@@ -106,7 +114,7 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
       <input id="addr" class="input" placeholder="0x... your NGN Wallet address"/>
       <button id="claimBtn" class="btn" onclick="claim()">Claim 100 NGN</button>
       <button class="btn ghost" onclick="location.href='/wallet'">🪙 Don't have a wallet? Create NGN Wallet</button>
-      <div style="font-size:11px;color:#666;margin-top:8px">Limit: 1 claim per address per 24 hours. Faucet is for testing & onboarding.</div>
+      <div style="font-size:11px;color:#666;margin-top:8px">Limit: 1 claim per address per 6 hours. Faucet is for onboarding only — not income. Faucet balance: <span id="faucetBal2">—</span></div>
     </div>
     <div id="mineBox" style="display:none">
       <div class="label">Miner Address</div>
@@ -127,12 +135,13 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
       <li><b style="color:#fff">Community-mined:</b> New NGN is created only by miners securing the network. No pre-mine sale.</li>
       <li><b style="color:#fff">Non-custodial:</b> You hold your own keys. NGN Chain never holds or controls your funds.</li>
     </ul>
+    <p style="margin-top:10px"><a href="/blog/what-is-decentralized-digital-asset" style="color:#00e68c;font-weight:700">📝 New to crypto? Read: What is a Decentralized Digital Asset? →</a></p>
   </div>
 
-  <!-- TOKENOMICS - ACCURATE -->
+  <!-- TOKENOMICS - ACCURATE v3.0 -->
   <div class="card">
     <h2>📊 NGN Tokenomics — Official</h2>
-    <p>Transparent, fixed rules. No hidden minting.</p>
+    <p>Transparent, fixed rules. No hidden minting. Enforced by code.</p>
     <table>
       <tr><td>Token Name</td><td>NGN Chain</td></tr>
       <tr><td>Symbol</td><td>NGN</td></tr>
@@ -141,7 +150,8 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
       <tr><td>Consensus</td><td>Proof of Work (PoW)</td></tr>
       <tr><td>Block Reward</td><td>50 NGN</td></tr>
       <tr><td>Max Supply</td><td>10,000,000,000 NGN</td></tr>
-      <tr><td>Faucet</td><td>100 NGN / 24h</td></tr>
+      <tr><td>Faucet</td><td>100 NGN / 6h</td></tr>
+      <tr><td>Trader Fee</td><td>0.1% → Faucet Wallet</td></tr>
       <tr><td>Price</td><td>Free Float — Market Decides</td></tr>
     </table>
     <p style="margin-top:10px;font-size:12px;color:#888">Price Disclaimer: NGN has no fixed peg to the Naira, Dollar, or any fiat currency. Its price is free-floating and determined solely by supply and demand on open markets. NGN Chain does not guarantee any price or return.</p>
@@ -157,34 +167,39 @@ td:last-child{text-align:right;color:#fff;font-weight:700}
       <a href="/trader"><span>📊</span>Trader</a>
       <a href="/studio"><span>&lt;/&gt;</span>Studio</a>
       <a href="/whitepaper"><span>📄</span>Whitepaper</a>
+      <a href="/blog/what-is-decentralized-digital-asset"><span>📝</span>Blog</a>
+      <a href="/faucet"><span>🚰</span>Faucet</a>
     </div>
   </div>
 
-  <!-- ROADMAP -->
+  <!-- ROADMAP - HONEST -->
   <div class="card">
     <h2>🗺️ Roadmap</h2>
     <ul>
-      <li><b style="color:#fff">Phase 1 — Live ✅</b> Chain, Wallet, Miner, Faucet, Explorer, Trader</li>
-      <li><b style="color:#fff">Phase 2 — In Progress</b> Whitepaper, Public Docs, Community, Security Audit of Wallet</li>
+      <li><b style="color:#fff">Phase 1 — Live ✅</b> Chain, Wallet, Miner, Faucet, Explorer, Trader, Studio</li>
+      <li><b style="color:#fff">Phase 2 — In Progress</b> Whitepaper, Blog, Public Docs, Community, Wallet Security Review</li>
       <li><b style="color:#fff">Phase 3 — Growth</b> Mobile Wallet App, Token Listings, Merchant Tools, EVM Smart Contracts</li>
       <li><b style="color:#fff">Phase 4 — Scale</b> Validator Decentralization, Cross-Chain Bridges, Global Partnerships</li>
     </ul>
+    <p style="font-size:11px;color:#666;margin-top:8px">Roadmap is directional, not a promise of dates or returns.</p>
   </div>
 
   <!-- FAQ -->
   <div class="card faq">
     <h2>❓ Frequently Asked Questions</h2>
     <details><summary>Is NGN only for Nigerians?</summary><p>No. NGN Chain is global. The name NGN comes from its origin, but anyone in the world can use, mine, and build on it.</p></details>
-    <details><summary>What is the total supply?</summary><p>Max supply is 10,000,000,000 NGN (10 Billion). New NGN is only created via mining rewards of 50 NGN per block until max supply is reached.</p></details>
-    <details><summary>What is the price of NGN?</summary><p>NGN is free-floating. There is no fixed price, no peg, and no guarantee. The market decides based on supply and demand.</p></details>
+    <details><summary>What is a decentralized digital asset?</summary><p>It means NGN is digital money that belongs to you, not to a bank. No single person can freeze it, block it, or print more beyond the 10B limit. <a href="/blog/what-is-decentralized-digital-asset" style="color:#00e68c">Read simple explanation →</a></p></details>
+    <details><summary>What is the total supply?</summary><p>Max supply is 10,000,000,000 NGN (10 Billion). New NGN is only created via mining rewards of 50 NGN per block until max supply is reached. Mining stops at 10B.</p></details>
+    <details><summary>What is the price of NGN?</summary><p>NGN is free-floating. There is no fixed price, no peg, and no guarantee. The market decides based on supply and demand. Check live price on NGN Trader.</p></details>
+    <details><summary>How often can I claim from Faucet?</summary><p>Once every 6 hours per address. Faucet is for onboarding and testing, not income.</p></details>
     <details><summary>Do I need MetaMask?</summary><p>No. NGN Wallet is built-in. You can create a wallet in 10 seconds with a 12-word backup. MetaMask is optional for advanced users.</p></details>
     <details><summary>What if I lose my 12 words?</summary><p>Your wallet cannot be recovered by anyone, including NGN Chain. Keep your seed phrase on paper in a safe place. Never share it with anyone.</p></details>
-    <details><summary>Is NGN Chain audited?</summary><p>NGN Chain is currently in public test / early mainnet phase. Use with amounts you can afford to lose. A formal security audit is part of Phase 2.</p></details>
+    <details><summary>Is NGN Chain audited?</summary><p>NGN Chain is currently in public early phase. Use with amounts you can afford to lose. A formal third-party security audit is planned, but has not been completed yet.</p></details>
   </div>
 
   <div class="footer">
     <b style="color:#888">NGN Chain • Chain ID 777 • ngn-chain.onrender.com</b><br>
-    <a href="/wallet">Wallet</a> • <a href="/miner">Miner</a> • <a href="/explorer">Explorer</a> • <a href="/trader">Trader</a> • <a href="/whitepaper">Whitepaper</a><br><br>
+    <a href="/wallet">Wallet</a> • <a href="/miner">Miner</a> • <a href="/explorer">Explorer</a> • <a href="/trader">Trader</a> • <a href="/whitepaper">Whitepaper</a> • <a href="/blog/what-is-decentralized-digital-asset">Blog</a><br><br>
     <span>Disclaimer: NGN is a decentralized digital asset. It is not legal tender, not a stablecoin, and not an investment product. Price is free-floating and volatile. Never share your seed phrase. NGN Chain is not a bank and does not hold user funds. Use at your own risk.</span><br><br>
     © 2026 NGN Chain. All Rights Reserved.
   </div>
@@ -198,11 +213,25 @@ function switchTab(m){
   $('faucetBox').style.display = m==='faucet' ? 'block' : 'none';
   $('mineBox').style.display = m==='mine' ? 'block' : 'none';
 }
+function fmt(n){ if(n===undefined||n===null) return '—'; if(n>=1000000) return (n/1000000).toFixed(2)+'M'; if(n>=1000) return n.toLocaleString(undefined,{maximumFractionDigits:0}); return Number(n).toFixed(2); }
 async function loadStats(){
   try{
     const res = await fetch('/api/stats'); const data = await res.json();
-    $('block').innerText = data.blockNumber ?? '—';
+    if(data.blockNumber!==undefined) $('blockLabel').innerText = 'Block ' + data.blockNumber;
+    if(data.circulating!==undefined) $('circ').innerText = fmt(data.circulating);
+    if(data.holders!==undefined) $('holders').innerText = data.holders;
+    if(data.faucetBalance!==undefined){
+      const fb = parseFloat(data.faucetBalance);
+      $('faucetBal').innerText = fmt(fb);
+      $('faucetBal2').innerText = fmt(fb) + ' NGN';
+      $('faucetStatus').innerText = fb > 100 ? 'Live ✅' : 'Low ⚠️';
+    }
     if(data.difficulty) $('diff').innerText = data.difficulty;
+    // Live price from trader
+    try{
+      const pr = await fetch('/api/trader/price'); const pd = await pr.json();
+      if(pd.price!==undefined) $('price').innerText = '$' + Number(pd.price).toFixed(6);
+    }catch{}
   }catch{}
 }
 async function claim(){
@@ -213,8 +242,8 @@ async function claim(){
   try{
     const res = await fetch('/faucet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address})});
     const data = await res.json();
-    if(data.success){ msg.innerText = `✅ Success • ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Failed'; }
-  }catch{ msg.innerText = 'Network error'; }
+    if(data.success){ msg.innerText = `✅ Success • You got 100 NGN • Tx: ${data.txHash}`; loadStats(); }else{ msg.innerText = data.error || 'Failed'; }
+  }catch{ msg.innerText = 'Network error - try again'; }
   finally{ btn.disabled = false; btn.innerText = 'Claim 100 NGN'; }
 }
 function goMiner(){
